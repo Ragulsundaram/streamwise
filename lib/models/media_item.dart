@@ -4,6 +4,7 @@ class MediaItem {
   final int id;
   final String title;
   final String posterPath;
+  final double voteAverage;
   final String mediaType;
   bool isSelected;
 
@@ -11,6 +12,7 @@ class MediaItem {
     required this.id,
     required this.title,
     required this.posterPath,
+    required this.voteAverage,
     required this.mediaType,
     this.isSelected = false,
   });
@@ -19,8 +21,12 @@ class MediaItem {
     return MediaItem(
       id: json['id'],
       title: type == 'movie' ? json['title'] : json['name'],
-      posterPath: json['poster_path'] ?? '',
+      posterPath: json['poster_path'] != null 
+          ? 'https://image.tmdb.org/t/p/w500${json['poster_path']}'
+          : 'https://via.placeholder.com/500x750',
       mediaType: type,
+      voteAverage: (json['vote_average'] as num?)?.toDouble() ?? 0.0,
+      isSelected: false,
     );
   }
 

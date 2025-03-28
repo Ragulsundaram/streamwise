@@ -34,4 +34,19 @@ class TMDBService {
       throw Exception('Failed to load media details');
     }
   }
+
+  Future<List<MediaItem>> getTrendingMedia(String timeWindow, [int page = 1]) async {
+      final response = await http.get(
+        Uri.parse('$baseUrl/trending/all/$timeWindow?api_key=$apiKey&page=$page'),
+      );
+  
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        return (data['results'] as List)
+            .map((item) => MediaItem.fromJson(item, item['media_type']))
+            .toList();
+      } else {
+        throw Exception('Failed to load trending media');
+      }
+    }
 }
