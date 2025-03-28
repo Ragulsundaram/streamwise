@@ -3,6 +3,9 @@ import 'package:iconsax/iconsax.dart';
 import '../../constants/colors.dart';
 import '../../services/tmdb_service.dart';
 import '../../models/media_item.dart';
+import '../details/movie_details_screen.dart';
+import '../details/tv_show_details_screen.dart';
+import '../details/series_details_screen.dart';
 
 class DiscoverScreen extends StatefulWidget {
   const DiscoverScreen({super.key});
@@ -217,19 +220,30 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
     );
   }
 
+  // Inside _DiscoverScreenState class
+  // Fix 1: Remove extra indentation for _onMediaTap and _buildMediaCard methods
+  void _onMediaTap(int id, String mediaType) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => mediaType == 'movie'
+            ? MovieDetailsScreen(movieId: id)
+            : SeriesDetailsScreen(seriesId: id),
+      ),
+    );
+  }
+
   Widget _buildMediaCard(MediaItem item) {
     return GestureDetector(
-      onTap: () {
-        // TODO: Navigate to detail page
-      },
+      onTap: () => _onMediaTap(item.id, item.mediaType),
       child: Padding(
         padding: const EdgeInsets.only(right: 12),
         child: SizedBox(
-          width: 140,  // Reduced from 160
+          width: 140,
           child: ClipRRect(
             borderRadius: BorderRadius.circular(12),
             child: AspectRatio(
-              aspectRatio: 2/3,  // Keeping the same aspect ratio
+              aspectRatio: 2/3,
               child: Stack(
                 children: [
                   Container(
