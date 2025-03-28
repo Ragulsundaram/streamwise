@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class TasteProfile {
   final Map<String, Map<String, dynamic>> genres;
@@ -70,6 +72,37 @@ class TasteProfile {
     for (var entry in entriesToShow) {
       print('${entry.value['name']} (ID: ${entry.key}): '
           '${(entry.value['weight'] as double).toStringAsFixed(2)}');
+    }
+  }
+
+  static Future<TasteProfile?> loadSavedProfile(String username) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final profileJson = prefs.getString('user_taste_profile_$username');
+      
+      if (profileJson != null) {
+        final Map<String, dynamic> profileMap = json.decode(profileJson);
+        return TasteProfile.fromJson(profileMap);
+      }
+      return null;
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error loading taste profile: $e');
+      }
+      return null;
+    }
+  }
+
+  // Add save method for convenience
+  Future<bool> save() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return await prefs.setString('user_taste_profile', json.encode(toJson()));
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error saving taste profile: $e');
+      }
+      return false;
     }
   }
 }

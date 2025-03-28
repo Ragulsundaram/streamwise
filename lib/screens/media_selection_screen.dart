@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';  // Add this
 import '../models/media_item.dart';
 import '../services/tmdb_service.dart';
 import '../services/profile_service.dart';
 import '../constants/colors.dart';
+import '../providers/auth_provider.dart';  // Add this
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:streamwise/screens/home_screen.dart';
+import 'dart:convert';  // Add this import
 
 class MediaSelectionScreen extends StatefulWidget {
   const MediaSelectionScreen({super.key});
@@ -169,20 +174,30 @@ class _MediaSelectionScreenState extends State<MediaSelectionScreen> {
     try {
       final profileService = ProfileService(_tmdbService);
       final profile = await profileService.generateProfile(selectedItems);
-      profile.logProfile();
+      
+      // Get current user's username and save profile
+      final authProvider = context.read<AuthProvider>();
+      final username = authProvider.username; // Use the getter directly
+      
+      if (username != null && username.isNotEmpty) {
+        final prefs = await SharedPreferences.getInstance();
+        final profileJson = jsonEncode(profile.toJson());
+        await prefs.setString('user_taste_profile_$username', profileJson);
+        profile.logProfile();
+      } else {
+        throw Exception('No username found');
+      }
 
-      // TODO: Save profile and navigate to home screen
       if (!mounted) return;
       
-      // Navigate to home screen (implement this)
-      // Navigator.pushReplacement(
-      //   context,
-      //   MaterialPageRoute(builder: (context) => const HomeScreen()),
-      // );
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const HomeScreen()),
+      );
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Error generating profile')),
+        const SnackBar(content: Text('Error saving taste profile')),
       );
     } finally {
       if (mounted) {

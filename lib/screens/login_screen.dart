@@ -4,7 +4,9 @@ import 'package:provider/provider.dart';
 import 'package:streamwise/constants/colors.dart';
 import 'package:streamwise/providers/auth_provider.dart';
 import 'package:streamwise/screens/signup_screen.dart';
-import 'package:streamwise/screens/media_selection_screen.dart';  // Add this import
+import 'package:streamwise/screens/media_selection_screen.dart';
+import 'package:streamwise/screens/home_screen.dart';  // Add this
+import 'package:streamwise/models/profile/taste_profile.dart';  // Add this
 import '../widgets/common/app_logo.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -153,10 +155,17 @@ class _LoginScreenState extends State<LoginScreen> {
       );
 
       if (success) {
+        final username = context.read<AuthProvider>().username;
+        final savedProfile = await TasteProfile.loadSavedProfile(username!);
+        
+        if (!mounted) return;
+
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (context) => const MediaSelectionScreen(),
+            builder: (context) => savedProfile != null 
+                ? const HomeScreen()
+                : const MediaSelectionScreen(),
           ),
         );
       }
