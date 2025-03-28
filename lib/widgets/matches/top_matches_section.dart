@@ -41,55 +41,36 @@ class _TopMatchesSectionState extends State<TopMatchesSection> {
     super.dispose();
   }
 
-  Future<void> _fetchTopMatches() async {
-    if (_isLoading) return;
+  Future<void> _fetchTopMatches({bool forceRefresh = false}) async {
+    if (_isLoading && !forceRefresh) return;
+    
     setState(() => _isLoading = true);
+    
     try {
       final mediaType = isMovie ? 'movie' : 'tv';
+      // Don't clear items until we have new ones
       final matches = await _tmdbService.getTopMatches(
         mediaType, 
         widget.userProfile,
         limit: 10,
+        forceRefresh: forceRefresh,
       );
-      setState(() => _matchedItems = matches);
+      
+      if (mounted) {
+        setState(() {
+          // Only update items if we got new ones
+          if (matches.isNotEmpty) {
+            _matchedItems = matches;
+          }
+        });
+      }
     } catch (e) {
       debugPrint('Error fetching top matches: $e');
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
-  }
-
-  Widget _buildMediaTypeToggle(bool isMovieToggle, String text) {
-    final isSelected = isMovie == isMovieToggle;
-    return GestureDetector(
-      onTap: () {
-        if (isMovie != isMovieToggle) {
-          setState(() {
-            isMovie = isMovieToggle;
-            _matchedItems.clear();
-          });
-          _fetchTopMatches();
-        }
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: 12,
-          vertical: 6,
-        ),
-        decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary : Colors.transparent,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Text(
-          text,
-          style: TextStyle(
-            color: isSelected ? Colors.black : Colors.white,
-            fontWeight: FontWeight.w500,
-            fontSize: 12,
-          ),
-        ),
-      ),
-    );
   }
 
   @override
@@ -102,13 +83,24 @@ class _TopMatchesSectionState extends State<TopMatchesSection> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'Top Matches',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                ),
+              Row(
+                children: [
+                  const Text(
+                    'Top Matches',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.refresh_rounded, color: Colors.white),
+                    onPressed: () => _fetchTopMatches(forceRefresh: true),
+                    padding: const EdgeInsets.only(left: 4),
+                    constraints: const BoxConstraints(),
+                    iconSize: 20,
+                  ),
+                ],
               ),
               Container(
                 padding: const EdgeInsets.all(2),
@@ -252,6 +244,39 @@ class _TopMatchesSectionState extends State<TopMatchesSection> {
                 ],
               ),
             ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMediaTypeToggle(bool isMovieToggle, String text) {
+    final isSelected = isMovie == isMovieToggle;
+    return GestureDetector(
+      onTap: () {
+        if (isMovie != isMovieToggle) {
+          setState(() {
+            isMovie = isMovieToggle;
+          });
+          // Fetch new matches immediately after toggle
+          _fetchTopMatches();
+        }
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 6,
+        ),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.primary : Colors.transparent,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Text(
+          text,
+          style: TextStyle(
+            color: isSelected ? Colors.black : Colors.white,
+            fontSize: 14,
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
           ),
         ),
       ),
