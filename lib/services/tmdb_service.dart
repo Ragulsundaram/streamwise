@@ -88,19 +88,36 @@ class TMDBService {
   Future<List<MediaItem>> getTopMatches(
     String mediaType, 
     TasteProfile userProfile, 
-    {int limit = 10, bool forceRefresh = false}
+    {
+      int limit = 10, 
+      bool forceRefresh = false,
+      void Function(MediaItem item)? onMatchCalculated,
+    }
   ) async {
     final cacheKey = mediaType;
     final now = DateTime.now();
 
     debugPrint('🔍 Starting getTopMatches - ForceRefresh: $forceRefresh, MediaType: $mediaType');
 
+    // Only use cache if not force refreshing
     if (!forceRefresh && _topMatchesCache.containsKey(cacheKey)) {
       final lastFetch = _lastFetchTime[cacheKey];
       if (lastFetch != null && now.difference(lastFetch).inHours < 24) {
         debugPrint('📦 Returning cached data for $mediaType');
+        // Return cached items one by one through callback
+        if (onMatchCalculated != null) {
+          for (var item in _topMatchesCache[cacheKey]!) {
+            onMatchCalculated(item);
+          }
+        }
         return _topMatchesCache[cacheKey]!;
       }
+    }
+
+    // Clear cache for this media type when force refreshing
+    if (forceRefresh) {
+      _topMatchesCache.remove(cacheKey);
+      _lastFetchTime.remove(cacheKey);
     }
 
     List<MediaItem> potentialMatches = [];
@@ -141,25 +158,33 @@ class TMDBService {
       potentialMatches.shuffle();
       
       // Calculate matches for the combined list
+      // Calculate matches one by one
       for (var item in potentialMatches) {
         try {
           final details = await getMediaDetails(item.id, mediaType);
           final match = MatcherService.calculateMatchPercentage(details, userProfile);
-          debugPrint('✨ Match calculated for ${item.title}: $match%');
           item.matchPercentage = match;
+          
+          // Immediately notify UI of the new match
+          onMatchCalculated?.call(item);
           matchedItems.add(item);
+          
+          // If we have enough matches with good scores, we can stop early
+          if (matchedItems.length >= limit * 2) {
+            matchedItems.sort((a, b) => (b.matchPercentage ?? 0).compareTo(a.matchPercentage ?? 0));
+            if ((matchedItems[limit - 1].matchPercentage ?? 0) > 15) {
+              break;
+            }
+          }
         } catch (e) {
           debugPrint('❌ Error calculating match for item ${item.id}: $e');
           continue;
         }
       }
       
+      // Final sort and update cache
       matchedItems.sort((a, b) => (b.matchPercentage ?? 0).compareTo(a.matchPercentage ?? 0));
-      debugPrint('📊 Total matched items after sorting: ${matchedItems.length}');
-      
       final topMatches = matchedItems.take(limit).toList();
-      debugPrint('🏆 Final top matches count: ${topMatches.length}');
-      
       _topMatchesCache[cacheKey] = topMatches;
       _lastFetchTime[cacheKey] = now;
       

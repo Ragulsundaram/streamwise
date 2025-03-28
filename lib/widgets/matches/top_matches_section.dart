@@ -44,26 +44,27 @@ class _TopMatchesSectionState extends State<TopMatchesSection> {
   Future<void> _fetchTopMatches({bool forceRefresh = false}) async {
     if (_isLoading && !forceRefresh) return;
     
-    setState(() => _isLoading = true);
+    setState(() {
+      _isLoading = true;
+      _matchedItems = []; // Clear existing items when starting new fetch
+    });
     
     try {
       final mediaType = isMovie ? 'movie' : 'tv';
-      // Don't clear items until we have new ones
-      final matches = await _tmdbService.getTopMatches(
+      await _tmdbService.getTopMatches(
         mediaType, 
         widget.userProfile,
         limit: 10,
         forceRefresh: forceRefresh,
-      );
-      
-      if (mounted) {
-        setState(() {
-          // Only update items if we got new ones
-          if (matches.isNotEmpty) {
-            _matchedItems = matches;
+        onMatchCalculated: (MediaItem item) {
+          if (mounted) {
+            setState(() {
+              _matchedItems = [..._matchedItems, item]
+                ..sort((a, b) => (b.matchPercentage ?? 0).compareTo(a.matchPercentage ?? 0));
+            });
           }
-        });
-      }
+        },
+      );
     } catch (e) {
       debugPrint('Error fetching top matches: $e');
     } finally {
@@ -71,6 +72,41 @@ class _TopMatchesSectionState extends State<TopMatchesSection> {
         setState(() => _isLoading = false);
       }
     }
+  }
+
+  Widget _buildMediaTypeToggle(bool isMovieToggle, String text) {
+    final isSelected = isMovie == isMovieToggle;
+    return GestureDetector(
+      onTap: () {
+        if (isMovie != isMovieToggle) {
+          setState(() {
+            isMovie = isMovieToggle;
+            // Only clear items, don't force refresh
+            _matchedItems = [];
+          });
+          // Use cached data if available
+          _fetchTopMatches(forceRefresh: false);
+        }
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 6,
+        ),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.primary : Colors.transparent,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Text(
+          text,
+          style: TextStyle(
+            color: isSelected ? Colors.black : Colors.white,
+            fontSize: 14,
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -120,9 +156,13 @@ class _TopMatchesSectionState extends State<TopMatchesSection> {
         ),
         const SizedBox(height: 16),
         SizedBox(
-          height: 220,
-          child: _isLoading
-              ? const Center(child: CircularProgressIndicator())
+          height: 210,
+          child: _isLoading && _matchedItems.isEmpty
+              ? const Center(
+                  child: CircularProgressIndicator(
+                    color: AppColors.primary,
+                  ),
+                )
               : _matchedItems.isEmpty
                   ? const Center(
                       child: Text(
@@ -131,8 +171,9 @@ class _TopMatchesSectionState extends State<TopMatchesSection> {
                       ),
                     )
                   : ListView.builder(
-                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      controller: _scrollController,
                       scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
                       itemCount: _matchedItems.length,
                       itemBuilder: (context, index) {
                         return _buildMediaCard(_matchedItems[index]);
@@ -145,16 +186,18 @@ class _TopMatchesSectionState extends State<TopMatchesSection> {
 
   Widget _buildMediaCard(MediaItem item) {
     return GestureDetector(
-      onTap: () => Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => item.mediaType == 'movie'
-              ? MovieDetailsScreen(movieId: item.id)
-              : SeriesDetailsScreen(seriesId: item.id),
-        ),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.only(right: 12),
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => item.mediaType == 'movie'
+                ? MovieDetailsScreen(movieId: item.id)
+                : SeriesDetailsScreen(seriesId: item.id),
+          ),
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.only(right: 12),
         child: SizedBox(
           width: 140,
           child: ClipRRect(
@@ -173,7 +216,6 @@ class _TopMatchesSectionState extends State<TopMatchesSection> {
                       ),
                     ),
                   ),
-                  // Match Percentage
                   if (item.matchPercentage != null)
                     Positioned(
                       top: 8,
@@ -207,76 +249,9 @@ class _TopMatchesSectionState extends State<TopMatchesSection> {
                         ),
                       ),
                     ),
-                  // TMDB Rating
-                  if (item.voteAverage > 0.0 && !item.voteAverage.isNaN)
-                    Positioned(
-                      top: 8,
-                      left: 8,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(0.7),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Row(
-                          children: [
-                            const Icon(
-                              Iconsax.star1,
-                              color: Colors.amber,
-                              size: 14,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              item.voteAverage.toStringAsFixed(1),
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
                 ],
               ),
             ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildMediaTypeToggle(bool isMovieToggle, String text) {
-    final isSelected = isMovie == isMovieToggle;
-    return GestureDetector(
-      onTap: () {
-        if (isMovie != isMovieToggle) {
-          setState(() {
-            isMovie = isMovieToggle;
-          });
-          // Fetch new matches immediately after toggle
-          _fetchTopMatches();
-        }
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: 12,
-          vertical: 6,
-        ),
-        decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary : Colors.transparent,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Text(
-          text,
-          style: TextStyle(
-            color: isSelected ? Colors.black : Colors.white,
-            fontSize: 14,
-            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
           ),
         ),
       ),
