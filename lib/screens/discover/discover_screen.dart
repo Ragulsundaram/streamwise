@@ -13,75 +13,84 @@ class DiscoverScreen extends StatefulWidget {
 
 class _DiscoverScreenState extends State<DiscoverScreen> {
   bool isToday = true;
+  bool isMovie = true;  // Add this
   final TMDBService _tmdbService = TMDBService();
   List<MediaItem> _trendingItems = [];
+  List<MediaItem> _newReleaseItems = [];  // Add this
   bool _isLoading = false;
+  bool _isNewReleasesLoading = false;  // Add this
   final ScrollController _scrollController = ScrollController();
+  final ScrollController _newReleasesScrollController = ScrollController();  // Add this
   int _currentPage = 1;
+  int _newReleasesPage = 1;  // Add this
 
   @override
   void initState() {
     super.initState();
     _fetchTrendingItems();
+    _fetchNewReleases();  // Add this
     _scrollController.addListener(_onScroll);
+    _newReleasesScrollController.addListener(_onNewReleasesScroll);  // Add this
   }
 
-  @override
-  void dispose() {
-    _scrollController.dispose();
-    super.dispose();
-  }
-
-  void _onScroll() {
-    if (_scrollController.position.pixels == _scrollController.position.maxScrollExtent) {
-      _loadMoreItems();
-    }
-  }
-
-  Future<void> _loadMoreItems() async {
-    if (!_isLoading) {
-      _currentPage++;
-      await _fetchTrendingItems(page: _currentPage, loadMore: true);
-    }
-  }
-
-  Future<void> _fetchTrendingItems({int page = 1, bool loadMore = false}) async {
-    setState(() => _isLoading = true);
+  // Add this method
+  Future<void> _fetchNewReleases({int page = 1, bool loadMore = false}) async {
+    setState(() => _isNewReleasesLoading = true);
     try {
-      final timeWindow = isToday ? 'day' : 'week';
-      final response = await _tmdbService.getTrendingMedia(timeWindow, page);
+      final mediaType = isMovie ? 'movie' : 'tv';
+      final response = await _tmdbService.getNewReleases(mediaType, page);
       setState(() {
         if (loadMore) {
-          _trendingItems.addAll(response);
+          _newReleaseItems.addAll(response);
         } else {
-          _trendingItems = response;
+          _newReleaseItems = response;
         }
       });
     } catch (e) {
-      debugPrint('Error fetching trending items: $e');
+      debugPrint('Error fetching new releases: $e');
     } finally {
-      setState(() => _isLoading = false);
+      setState(() => _isNewReleasesLoading = false);
+    }
+  }
+
+  // Add this method
+  void _onNewReleasesScroll() {
+    if (_newReleasesScrollController.position.pixels == 
+        _newReleasesScrollController.position.maxScrollExtent) {
+      _loadMoreNewReleases();
+    }
+  }
+
+  // Add this method
+  Future<void> _loadMoreNewReleases() async {
+    if (!_isNewReleasesLoading) {
+      _newReleasesPage++;
+      await _fetchNewReleases(page: _newReleasesPage, loadMore: true);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return RefreshIndicator(
-      color: AppColors.primary,  // Add this
-      backgroundColor: AppColors.background,  // Add this
+      color: AppColors.primary,
+      backgroundColor: AppColors.background,
       onRefresh: () async {
         _currentPage = 1;
-        await _fetchTrendingItems();
+        _newReleasesPage = 1;  // Reset new releases page
+        await Future.wait([
+          _fetchTrendingItems(),
+          _fetchNewReleases(),
+        ]);
       },
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 16.0),  // Changed padding
+          padding: const EdgeInsets.symmetric(vertical: 16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),  // Add padding
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -94,10 +103,10 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                       ),
                     ),
                     Container(
-                      padding: const EdgeInsets.all(2),  // Reduced from 4
+                      padding: const EdgeInsets.all(2),
                       decoration: BoxDecoration(
                         color: Colors.white.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(16),  // Reduced from 20
+                        borderRadius: BorderRadius.circular(16),
                       ),
                       child: Row(
                         children: [
@@ -111,7 +120,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
               ),
               const SizedBox(height: 16),
               SizedBox(
-                height: 220,  // Reduced from 280
+                height: 220,
                 child: _trendingItems.isEmpty && !_isLoading
                     ? const Center(
                         child: Text(
@@ -120,7 +129,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                         ),
                       )
                     : ListView.builder(
-                        padding: const EdgeInsets.symmetric(horizontal: 16.0),  // Add padding
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
                         controller: _scrollController,
                         scrollDirection: Axis.horizontal,
                         itemCount: _trendingItems.length + (_isLoading ? 1 : 0),
@@ -135,6 +144,68 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                           }
 
                           final item = _trendingItems[index];
+                          return _buildMediaCard(item);
+                        },
+                      ),
+              ),
+              const SizedBox(height: 24),  // Add spacing between sections
+
+              // New Releases Section
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'New Releases',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.all(2),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Row(
+                        children: [
+                          _buildMediaTypeToggle(true, 'Movies'),
+                          _buildMediaTypeToggle(false, 'TV Shows'),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                height: 220,
+                child: _newReleaseItems.isEmpty && !_isNewReleasesLoading
+                    ? const Center(
+                        child: Text(
+                          'No new releases found',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      )
+                    : ListView.builder(
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                        controller: _newReleasesScrollController,
+                        scrollDirection: Axis.horizontal,
+                        itemCount: _newReleaseItems.length + (_isNewReleasesLoading ? 1 : 0),
+                        itemBuilder: (context, index) {
+                          if (index == _newReleaseItems.length) {
+                            return const Center(
+                              child: Padding(
+                                padding: EdgeInsets.all(8.0),
+                                child: CircularProgressIndicator(),
+                              ),
+                            );
+                          }
+
+                          final item = _newReleaseItems[index];
                           return _buildMediaCard(item);
                         },
                       ),
@@ -241,6 +312,79 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
             color: isSelected ? Colors.black : Colors.white,
             fontWeight: FontWeight.w500,
             fontSize: 12,  // Added smaller font size
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    _newReleasesScrollController.dispose();  // Add this
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels == _scrollController.position.maxScrollExtent) {
+      _loadMoreItems();
+    }
+  }
+
+  Future<void> _loadMoreItems() async {
+    if (!_isLoading) {
+      _currentPage++;
+      await _fetchTrendingItems(page: _currentPage, loadMore: true);
+    }
+  }
+
+  Future<void> _fetchTrendingItems({int page = 1, bool loadMore = false}) async {
+    setState(() => _isLoading = true);
+    try {
+      final timeWindow = isToday ? 'day' : 'week';
+      final response = await _tmdbService.getTrendingMedia(timeWindow, page);
+      setState(() {
+        if (loadMore) {
+          _trendingItems.addAll(response);
+        } else {
+          _trendingItems = response;
+        }
+      });
+    } catch (e) {
+      debugPrint('Error fetching trending items: $e');
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  Widget _buildMediaTypeToggle(bool isMovieToggle, String text) {
+    final isSelected = isMovie == isMovieToggle;
+    return GestureDetector(
+      onTap: () {
+        if (isMovie != isMovieToggle) {
+          setState(() {
+            isMovie = isMovieToggle;
+            _newReleasesPage = 1;
+            _newReleaseItems.clear();
+          });
+          _fetchNewReleases();
+        }
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 6,
+        ),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.primary : Colors.transparent,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Text(
+          text,
+          style: TextStyle(
+            color: isSelected ? Colors.black : Colors.white,
+            fontWeight: FontWeight.w500,
+            fontSize: 12,
           ),
         ),
       ),

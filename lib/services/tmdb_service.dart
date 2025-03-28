@@ -49,4 +49,31 @@ class TMDBService {
         throw Exception('Failed to load trending media');
       }
     }
+
+  Future<List<MediaItem>> getNewReleases(String mediaType, int page) async {
+    final response = await http.get(
+      Uri.parse(
+        '$baseUrl/discover/$mediaType?api_key=$apiKey'
+        '&sort_by=release_date.desc'
+        '&page=$page'
+        '&vote_count.gte=20'
+        '&with_original_language=en'
+        '${mediaType == "movie" 
+          ? "&primary_release_date.lte=${DateTime.now().toIso8601String()}"
+            "&primary_release_date.gte=${DateTime.now().subtract(const Duration(days: 90)).toIso8601String()}"
+          : "&first_air_date.lte=${DateTime.now().toIso8601String()}"
+            "&first_air_date.gte=${DateTime.now().subtract(const Duration(days: 90)).toIso8601String()}"
+        }'
+      ),
+    );
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      return (data['results'] as List)
+          .map((item) => MediaItem.fromJson(item, mediaType))
+          .toList();
+    } else {
+      throw Exception('Failed to load new releases');
+    }
+  }
 }
