@@ -170,14 +170,45 @@ class _MediaSelectionScreenState extends State<MediaSelectionScreen> {
       return;
     }
 
-    setState(() => _isLoading = true);
+    // Show loading dialog
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return WillPopScope(
+          onWillPop: () async => false,
+          child: AlertDialog(
+            backgroundColor: AppColors.background,
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const CircularProgressIndicator(),
+                const SizedBox(height: 20),
+                const Text(
+                  'Building Your Taste Profile...',
+                  style: TextStyle(color: Colors.white),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  '${selectedItems.length} items selected',
+                  style: const TextStyle(
+                    color: Colors.white70,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+
     try {
       final profileService = ProfileService(_tmdbService);
       final profile = await profileService.generateProfile(selectedItems);
       
-      // Get current user's username and save profile
       final authProvider = context.read<AuthProvider>();
-      final username = authProvider.username; // Use the getter directly
+      final username = authProvider.username;
       
       if (username != null && username.isNotEmpty) {
         final prefs = await SharedPreferences.getInstance();
@@ -190,19 +221,21 @@ class _MediaSelectionScreenState extends State<MediaSelectionScreen> {
 
       if (!mounted) return;
       
+      // Close loading dialog and navigate
+      Navigator.of(context).pop(); // Close dialog
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const HomeScreen()),
       );
     } catch (e) {
       if (!mounted) return;
+      
+      // Close loading dialog
+      Navigator.of(context).pop();
+      
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Error saving taste profile')),
       );
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
     }
   }
 

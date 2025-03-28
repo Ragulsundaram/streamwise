@@ -105,4 +105,16 @@ class TasteProfile {
       return false;
     }
   }
+
+  // Add this method after loadSavedProfile
+  static Future<void> deleteProfile(String username) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('user_taste_profile_$username');
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error deleting taste profile: $e');
+      }
+    }
+  }
 }

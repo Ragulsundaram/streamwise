@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
+import 'package:streamwise/models/profile/taste_profile.dart'; 
 import 'package:crypto/crypto.dart';
 
 class AuthProvider with ChangeNotifier {
@@ -77,10 +78,26 @@ class AuthProvider with ChangeNotifier {
   }
 
   Future<void> clearUsers() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_userKey);
-    await prefs.remove(_currentUserKey);
-    debugPrint('All users cleared');
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      // Get all users before clearing
+      final usersJson = prefs.getString(_userKey);
+      if (usersJson != null) {
+        final users = Map<String, dynamic>.from(jsonDecode(usersJson));
+        // Delete taste profiles for all users
+        for (var user in users.values) {
+          if (user['username'] != null) {
+            await TasteProfile.deleteProfile(user['username']);
+          }
+        }
+      }
+      // Clear user data
+      await prefs.remove(_userKey);
+      await prefs.remove(_currentUserKey);
+      debugPrint('All users and their taste profiles cleared');
+    } catch (e) {
+      debugPrint('Error clearing users: $e');
+    }
   }
 
   Future<(bool, String)> login(String username, String password) async {
