@@ -18,7 +18,13 @@ class AuthProvider with ChangeNotifier {
   bool get isInitialized => _isInitialized;
 
   AuthProvider() {
-    _initializeAuth();
+    // Remove automatic initialization from constructor
+  }
+
+  Future<void> initialize() async {
+    if (!_isInitialized) {
+      await _initializeAuth();
+    }
   }
 
   Future<void> _initializeAuth() async {
@@ -27,15 +33,33 @@ class AuthProvider with ChangeNotifier {
       final userData = prefs.getString(_currentUserKey);
       if (userData != null) {
         final Map<String, dynamic> user = jsonDecode(userData);
-        _username = user['username'];
-        _email = user['email'];
-        _isLoggedIn = true;
+        
+        // Check if user was logged in
+        if (user['isLoggedIn'] == true) {
+          _username = user['username'];
+          _email = user['email'];
+          _isLoggedIn = true;
+          debugPrint('Auth restored for user: $_username');
+        }
       }
     } catch (e) {
       debugPrint('Error initializing auth: $e');
     } finally {
       _isInitialized = true;
       notifyListeners();
+    }
+  }
+
+  Future<void> logout() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(_currentUserKey);
+      _isLoggedIn = false;
+      _username = null;
+      _email = null;
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Error during logout: $e');
     }
   }
 
@@ -122,10 +146,13 @@ class AuthProvider with ChangeNotifier {
       _username = username;
       _email = userEntry.key;
       
+      // Save complete user data including password hash
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_currentUserKey, jsonEncode({
         'username': _username,
         'email': _email,
+        'password': userEntry.value['password'],
+        'isLoggedIn': true,
       }));
       
       notifyListeners();
@@ -175,23 +202,9 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
-  Future<void> logout() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.remove(_currentUserKey);
-    } finally {
-      _isLoggedIn = false;
-      _username = null;
-      _email = null;
-      notifyListeners();
-    }
-  }
-
   @override
   void dispose() {
-    _isLoggedIn = false;
-    _username = null;
-    _email = null;
+    // Remove state clearing on dispose
     super.dispose();
   }
 }
