@@ -8,22 +8,22 @@ class MatcherService {
     double directorSimilarity = 0;
     double decadeSimilarity = 0;
 
-    // Calculate genre similarity
+    // Calculate genre similarity with normalized weights
     final mediaGenres = mediaDetails['genres'] as List<dynamic>;
     for (var genre in mediaGenres) {
       final genreId = genre['id'].toString();
       if (userProfile.genres.containsKey(genreId)) {
-        genreSimilarity += userProfile.genres[genreId]!['weight'] as double;
+        genreSimilarity += (userProfile.genres[genreId]!['weight'] as double) / 2;
       }
     }
 
-    // Calculate actor similarity
+    // Calculate actor similarity with more weight for main cast
     final credits = mediaDetails['credits'] as Map<String, dynamic>;
     final cast = credits['cast'] as List<dynamic>;
-    for (var actor in cast.take(5)) {
+    for (var actor in cast.take(3)) {  // Consider only top 3 actors
       final actorId = actor['id'].toString();
       if (userProfile.actors.containsKey(actorId)) {
-        actorSimilarity += userProfile.actors[actorId]!['weight'] as double;
+        actorSimilarity += (userProfile.actors[actorId]!['weight'] as double) / 1.5;
       }
     }
 
@@ -49,23 +49,22 @@ class MatcherService {
     }
 
     // Apply category weights
+    // Adjust weights for better matching
     final weightedSimilarity = (
-      genreSimilarity * 0.5 +
-      actorSimilarity * 0.2 +
+      genreSimilarity * 0.4 +  // Reduced from 0.5
+      actorSimilarity * 0.3 +  // Increased from 0.2
       directorSimilarity * 0.2 +
       decadeSimilarity * 0.1
     );
 
-    // Apply rating adjustment
+    // Soften rating adjustment
     final mediaRating = (mediaDetails['vote_average'] as num).toDouble();
     final ratingDifference = mediaRating - userProfile.averageRating;
-    final ratingAdjustment = 1 + (ratingDifference / 10);
+    final ratingAdjustment = 1 + (ratingDifference / 20);  // Reduced impact from 10 to 20
 
-    // Calculate final percentage
     final matchPercentage = (weightedSimilarity * ratingAdjustment * 100).clamp(0.0, 100.0);
-
     return matchPercentage.roundToDouble();
-  }
+}
 
   static Color getMatchColor(double percentage) {
     if (percentage >= 80) return Colors.green;

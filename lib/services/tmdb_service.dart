@@ -1,7 +1,10 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter/foundation.dart';  // Add this import for debugPrint
 import '../models/media_item.dart';
+import '../models/profile/taste_profile.dart';
+import '../services/matcher_service.dart';
 
 class TMDBService {
   final String baseUrl = 'https://api.themoviedb.org/3';
@@ -74,6 +77,43 @@ class TMDBService {
           .toList();
     } else {
       throw Exception('Failed to load new releases');
+    }
+  }
+
+  Future<List<MediaItem>> getTopMatches(
+    String mediaType, 
+    TasteProfile userProfile, 
+    {int limit = 10}
+  ) async {
+    List<MediaItem> matchedItems = [];
+    
+    try {
+      // Fetch more pages for better matches
+      for (int page = 1; page <= 3; page++) {  // Increased to 3 pages
+        final items = await getPopularMedia(mediaType, page);
+        for (var item in items) {
+          try {
+            final details = await getMediaDetails(item.id, mediaType);
+            final match = MatcherService.calculateMatchPercentage(details, userProfile);
+            
+            // Lower threshold and always add items
+            item.matchPercentage = match;
+            matchedItems.add(item);
+          } catch (e) {
+            debugPrint('Error calculating match for item ${item.id}: $e');
+            continue;
+          }
+        }
+      }
+      
+      // Sort by match percentage (highest first)
+      matchedItems.sort((a, b) => (b.matchPercentage ?? 0).compareTo(a.matchPercentage ?? 0));
+      
+      // Return top matches up to the limit
+      return matchedItems.take(limit).toList();
+    } catch (e) {
+      debugPrint('Error in getTopMatches: $e');
+      return [];
     }
   }
 }

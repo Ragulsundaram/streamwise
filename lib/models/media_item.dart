@@ -4,16 +4,18 @@ class MediaItem {
   final int id;
   final String title;
   final String posterPath;
-  final double voteAverage;
   final String mediaType;
+  final double voteAverage;
+  double? matchPercentage;
   bool isSelected;
 
   MediaItem({
     required this.id,
     required this.title,
     required this.posterPath,
-    required this.voteAverage,
     required this.mediaType,
+    required this.voteAverage,
+    this.matchPercentage,
     this.isSelected = false,
   });
 
@@ -26,15 +28,6 @@ class MediaItem {
           : 'https://via.placeholder.com/500x750',
       mediaType: type,
       voteAverage: (json['vote_average'] as num?)?.toDouble() ?? 0.0,
-      isSelected: false,
     );
   }
-
-  Map<String, dynamic> toJson() => {
-    'id': id,
-    'title': title,
-    'posterPath': posterPath,
-    'mediaType': mediaType,
-    'isSelected': isSelected,
-  };
 }

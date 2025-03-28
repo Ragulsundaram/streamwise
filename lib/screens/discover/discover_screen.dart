@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:provider/provider.dart';
 import '../../constants/colors.dart';
 import '../../services/tmdb_service.dart';
 import '../../models/media_item.dart';
+import '../../models/profile/taste_profile.dart';
+import '../../providers/auth_provider.dart';
 import '../details/movie_details_screen.dart';
-import '../details/tv_show_details_screen.dart';
 import '../details/series_details_screen.dart';
+import '../../widgets/matches/top_matches_section.dart';
 
 class DiscoverScreen extends StatefulWidget {
   const DiscoverScreen({super.key});
@@ -212,6 +215,24 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                           return _buildMediaCard(item);
                         },
                       ),
+              ),
+              const SizedBox(height: 24),
+              const SizedBox(height: 24),
+              Consumer<AuthProvider>(
+                builder: (context, authProvider, child) {
+                  if (authProvider.username == null) {
+                    return const SizedBox.shrink();
+                  }
+                  return FutureBuilder<TasteProfile?>(
+                    future: TasteProfile.loadSavedProfile(authProvider.username!),
+                    builder: (context, snapshot) {
+                      if (!snapshot.hasData || snapshot.data == null) {
+                        return const SizedBox.shrink();
+                      }
+                      return TopMatchesSection(userProfile: snapshot.data!);
+                    },
+                  );
+                },
               ),
             ],
           ),
