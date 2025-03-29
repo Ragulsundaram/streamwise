@@ -1,5 +1,7 @@
 import '../models/profile/taste_profile.dart';
+import '../../constants/colors.dart';
 import 'package:flutter/material.dart';
+import 'package:iconsax/iconsax.dart';
 
 class MatcherService {
   static double calculateMatchPercentage(Map<String, dynamic> mediaDetails, TasteProfile userProfile) {
@@ -83,8 +85,8 @@ class MatcherService {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
-            Icons.favorite,
-            color: getMatchColor(matchPercentage),
+            Iconsax.magic_star,
+            color: AppColors.primary,
             size: 16,
           ),
           const SizedBox(width: 4),

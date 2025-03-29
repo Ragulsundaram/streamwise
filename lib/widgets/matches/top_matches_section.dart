@@ -26,8 +26,14 @@ class _TopMatchesSectionState extends State<TopMatchesSection> {
   final TMDBService _tmdbService = TMDBService();
   final ScrollController _scrollController = ScrollController();
   bool isMovie = true;
-  List<MediaItem> _matchedItems = [];
-  bool _isLoading = false;
+  List<MediaItem> _moviesList = [];
+  List<MediaItem> _tvList = [];
+  bool _isLoadingMovies = false;
+  bool _isLoadingTV = false;
+  String? _currentActiveMediaType;
+
+  List<MediaItem> get _matchedItems => isMovie ? _moviesList : _tvList;
+  bool get _isLoading => isMovie ? _isLoadingMovies : _isLoadingTV;
 
   @override
   void initState() {
@@ -42,25 +48,38 @@ class _TopMatchesSectionState extends State<TopMatchesSection> {
   }
 
   Future<void> _fetchTopMatches({bool forceRefresh = false}) async {
-    if (_isLoading && !forceRefresh) return;
+    final currentMediaType = isMovie ? 'movie' : 'tv';
+    final currentList = isMovie ? _moviesList : _tvList;
+    
+    if ((_isLoading && !forceRefresh) || _currentActiveMediaType == currentMediaType) return;
     
     setState(() {
-      _isLoading = true;
-      _matchedItems = []; // Clear existing items when starting new fetch
+      _currentActiveMediaType = currentMediaType;
+      if (isMovie) {
+        _isLoadingMovies = true;
+        if (forceRefresh) _moviesList = [];
+      } else {
+        _isLoadingTV = true;
+        if (forceRefresh) _tvList = [];
+      }
     });
     
     try {
-      final mediaType = isMovie ? 'movie' : 'tv';
       await _tmdbService.getTopMatches(
-        mediaType, 
+        currentMediaType,
         widget.userProfile,
         limit: 10,
         forceRefresh: forceRefresh,
         onMatchCalculated: (MediaItem item) {
-          if (mounted) {
+          if (mounted && currentMediaType == _currentActiveMediaType) {
             setState(() {
-              _matchedItems = [..._matchedItems, item]
-                ..sort((a, b) => (b.matchPercentage ?? 0).compareTo(a.matchPercentage ?? 0));
+              if (isMovie) {
+                _moviesList = [..._moviesList, item]
+                  ..sort((a, b) => (b.matchPercentage ?? 0).compareTo(a.matchPercentage ?? 0));
+              } else {
+                _tvList = [..._tvList, item]
+                  ..sort((a, b) => (b.matchPercentage ?? 0).compareTo(a.matchPercentage ?? 0));
+              }
             });
           }
         },
@@ -68,8 +87,15 @@ class _TopMatchesSectionState extends State<TopMatchesSection> {
     } catch (e) {
       debugPrint('Error fetching top matches: $e');
     } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
+      if (mounted && currentMediaType == _currentActiveMediaType) {
+        setState(() {
+          if (isMovie) {
+            _isLoadingMovies = false;
+          } else {
+            _isLoadingTV = false;
+          }
+          _currentActiveMediaType = null;
+        });
       }
     }
   }
@@ -79,13 +105,10 @@ class _TopMatchesSectionState extends State<TopMatchesSection> {
     return GestureDetector(
       onTap: () {
         if (isMovie != isMovieToggle) {
-          setState(() {
-            isMovie = isMovieToggle;
-            // Only clear items, don't force refresh
-            _matchedItems = [];
-          });
-          // Use cached data if available
-          _fetchTopMatches(forceRefresh: false);
+          setState(() => isMovie = isMovieToggle);
+          if (_matchedItems.isEmpty) {
+            _fetchTopMatches(forceRefresh: false);
+          }
         }
       },
       child: Container(
@@ -120,6 +143,7 @@ class _TopMatchesSectionState extends State<TopMatchesSection> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Row(
+                mainAxisSize: MainAxisSize.min, // Add this
                 children: [
                   const Text(
                     'Top Matches',
@@ -129,12 +153,15 @@ class _TopMatchesSectionState extends State<TopMatchesSection> {
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.refresh_rounded, color: Colors.white),
-                    onPressed: () => _fetchTopMatches(forceRefresh: true),
-                    padding: const EdgeInsets.only(left: 4),
-                    constraints: const BoxConstraints(),
-                    iconSize: 20,
+                  Transform.translate( // Wrap IconButton with Transform
+                    offset: const Offset(-7, 0), // Move left by 8 pixels
+                    child: IconButton(
+                      icon: const Icon(Icons.refresh_rounded, color: Colors.white),
+                      onPressed: () => _fetchTopMatches(forceRefresh: true),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                      iconSize: 20,
+                    ),
                   ),
                 ],
               ),
@@ -216,6 +243,40 @@ class _TopMatchesSectionState extends State<TopMatchesSection> {
                       ),
                     ),
                   ),
+                  // TMDB Rating
+                  Positioned(
+                    top: 8,
+                    left: 8,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.7),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.star_rounded,
+                            color: Colors.amber,
+                            size: 14,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            item.voteAverage.toStringAsFixed(1),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  // Match Percentage
                   if (item.matchPercentage != null)
                     Positioned(
                       top: 8,

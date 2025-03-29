@@ -40,24 +40,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
   }
 
   // Add this method
-  Future<void> _fetchNewReleases({int page = 1, bool loadMore = false}) async {
-    setState(() => _isNewReleasesLoading = true);
-    try {
-      final mediaType = isMovie ? 'movie' : 'tv';
-      final response = await _tmdbService.getNewReleases(mediaType, page);
-      setState(() {
-        if (loadMore) {
-          _newReleaseItems.addAll(response);
-        } else {
-          _newReleaseItems = response;
-        }
-      });
-    } catch (e) {
-      debugPrint('Error fetching new releases: $e');
-    } finally {
-      setState(() => _isNewReleasesLoading = false);
-    }
-  }
+
 
   // Add this method
   void _onNewReleasesScroll() {
@@ -83,7 +66,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
       onRefresh: () async {
         _currentPage = 1;
         _newReleasesPage = 1;  // Reset new releases page
-        await Future.wait([
+        await Future.wait<void>([
           _fetchTrendingItems(),
           _fetchNewReleases(),
         ]);
@@ -280,7 +263,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                   if (item.voteAverage > 0.0 && !item.voteAverage.isNaN)
                     Positioned(
                       top: 8,
-                      right: 8,
+                      left: 8,
                       child: Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 8,
@@ -392,17 +375,31 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
     }
   }
 
+  // Add these class variables at the top of _DiscoverScreenState
+  List<MediaItem> _cachedMovies = [];
+  List<MediaItem> _cachedTV = [];
+  bool _hasCachedData = false;
+  
+
+  
+  // Remove any other implementations of _fetchNewReleases in the file
+  
+  // Update the _buildMediaTypeToggle method
   Widget _buildMediaTypeToggle(bool isMovieToggle, String text) {
     final isSelected = isMovie == isMovieToggle;
     return GestureDetector(
       onTap: () {
         if (isMovie != isMovieToggle) {
-          setState(() {
-            isMovie = isMovieToggle;
-            _newReleasesPage = 1;
-            _newReleaseItems.clear();
-          });
-          _fetchNewReleases();
+          setState(() => isMovie = isMovieToggle);
+          // Check if cached data exists before assigning
+          final newItems = isMovie ? _cachedMovies : _cachedTV;
+          if (newItems.isEmpty) {
+            // Force fetch if cache is empty
+            _hasCachedData = false;
+            _fetchNewReleases();
+          } else {
+            setState(() => _newReleaseItems = newItems);
+          }
         }
       },
       child: Container(
@@ -424,5 +421,37 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
         ),
       ),
     );
+  }
+
+  // Update the caching implementation in _fetchNewReleases
+  Future<void> _fetchNewReleases({int page = 1, bool loadMore = false}) async {
+    setState(() => _isNewReleasesLoading = true);
+    try {
+      final currentType = isMovie ? 'movie' : 'tv';
+      
+      if (!_hasCachedData || (loadMore && page > 1)) {
+        final response = await _tmdbService.getNewReleases(currentType, page);
+        
+        setState(() {
+          if (isMovie) {
+            _cachedMovies = loadMore ? [..._cachedMovies, ...response] : response;
+            _hasCachedData = _cachedMovies.isNotEmpty;
+          } else {
+            _cachedTV = loadMore ? [..._cachedTV, ...response] : response;
+            _hasCachedData = _cachedTV.isNotEmpty;
+          }
+          _newReleaseItems = isMovie ? _cachedMovies : _cachedTV;
+        });
+      } else {
+        final cachedItems = isMovie ? _cachedMovies : _cachedTV;
+        setState(() => _newReleaseItems = cachedItems.isNotEmpty 
+            ? cachedItems 
+            : []);
+      }
+    } catch (e) {
+      debugPrint('Error fetching new releases: $e');
+    } finally {
+      setState(() => _isNewReleasesLoading = false);
+    }
   }
 }
