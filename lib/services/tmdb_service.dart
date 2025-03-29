@@ -194,4 +194,36 @@ class TMDBService {
       return _topMatchesCache[cacheKey] ?? [];
     }
   }
+
+  Future<Map<String, dynamic>> getMediaCredits(int id, String type) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/$type/$id/credits?api_key=$apiKey'),
+    );
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      // Filter and limit cast data
+      if (data['cast'] != null && data['cast'] is List) {
+        data['cast'] = (data['cast'] as List)
+            .where((member) => 
+                member['profile_path'] != null && 
+                member['known_for_department'] == 'Acting')
+            .take(10)  // Limit to first 10 cast members
+            .toList();
+      }
+      // Add director info if available
+      if (data['crew'] != null && data['crew'] is List) {
+        final directors = (data['crew'] as List)
+            .where((member) => member['job'] == 'Director')
+            .take(1)
+            .toList();
+        if (directors.isNotEmpty) {
+          data['cast'].insert(0, directors.first);
+        }
+      }
+      return data;
+    } else {
+      throw Exception('Failed to load media credits');
+    }
+  }
 }

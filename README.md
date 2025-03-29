@@ -67,4 +67,27 @@ flutter run
 - shared_preferences: Local storage
 - http: API requests
 ```plaintext
-```
+
+## Design Solutions
+
+### Dynamic Content Spacing in Details Screens
+
+The movie and series details screens implement a dynamic spacing solution to handle varying content lengths:
+
+#### Problem
+- With fixed spacing, short titles created unnecessary gaps between elements
+- Long titles would push other content down inconsistently
+- Inconsistent visual hierarchy between movie/series details and synopsis sections
+
+#### Solution
+- Anchored the title overlay to a fixed position at the bottom of the backdrop
+- Implemented dynamic content growth downwards instead of pushing elements up
+- Used `mainAxisSize: MainAxisSize.min` to ensure content takes minimum required space
+- Maintained consistent padding between sections regardless of content length
+- Standardized the approach across both movie and series detail screens
+
+This solution ensures:
+- Consistent visual layout regardless of title length
+- Optimal space utilization
+- Better user experience with predictable content placement
+- Unified design language across different media types

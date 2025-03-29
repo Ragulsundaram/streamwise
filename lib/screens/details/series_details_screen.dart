@@ -33,6 +33,8 @@ class _SeriesDetailsScreenState extends State<SeriesDetailsScreen> {
   Future<void> _fetchSeriesDetails() async {
     try {
       final details = await _tmdbService.getMediaDetails(widget.seriesId, 'tv');
+      final credits = await _tmdbService.getMediaCredits(widget.seriesId, 'tv');
+      details['credits'] = credits;
       
       final username = context.read<AuthProvider>().username;
       if (username != null) {
@@ -84,8 +86,11 @@ class _SeriesDetailsScreenState extends State<SeriesDetailsScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // !!! IMPORTANT: DO NOT MODIFY THESE VALUES !!!
+                      // These specific dimensions and spacing values are crucial for maintaining
+                      // consistent layout across different title lengths
                       SizedBox(
-                        height: MediaQuery.of(context).size.height * 0.4,
+                        height: MediaQuery.of(context).size.height * 0.35,
                         width: double.infinity,
                         child: Stack(
                           children: [
@@ -237,7 +242,7 @@ class _SeriesDetailsScreenState extends State<SeriesDetailsScreen> {
                                   
                                   // Synopsis Section
                                   Padding(
-                                    padding: const EdgeInsets.fromLTRB(16.0, 4.0, 16.0, 16.0),
+                                    padding: const EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 0.0), // Adjusted padding
                                     child: Column(
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
@@ -258,9 +263,96 @@ class _SeriesDetailsScreenState extends State<SeriesDetailsScreen> {
                                             height: 1.5,
                                           ),
                                         ),
+                                        const SizedBox(height: 16), // Reduced from 24 to 16
+                                        Container(
+                                          height: 1,
+                                          color: Colors.white12,
+                                        ),
                                       ],
                                     ),
                                   ),
+                                  
+                                  // Cast Section
+                                  if (_seriesDetails!['credits'] != null && 
+                                      _seriesDetails!['credits']['cast'] != null &&
+                                      (_seriesDetails!['credits']['cast'] as List).isNotEmpty)
+                                    Padding(
+                                      padding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 16.0), // Adjusted padding
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Row(
+                                            children: [
+                                              const Text(
+                                                'Cast',
+                                                style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 18,
+                                                  fontWeight: FontWeight.w400,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          const SizedBox(height: 16),
+                                          SizedBox(
+                                            height: 120,
+                                            child: ListView.builder(
+                                              scrollDirection: Axis.horizontal,
+                                              itemCount: (_seriesDetails!['credits']['cast'] as List).length,
+                                              itemBuilder: (context, index) {
+                                                final cast = _seriesDetails!['credits']['cast'][index];
+                                                if (cast['profile_path'] == null) return const SizedBox.shrink();
+                                                return Container(
+                                                  width: 80,
+                                                  margin: EdgeInsets.only(
+                                                    right: 12,
+                                                    left: index == 0 ? 0 : 0,
+                                                  ),
+                                                  child: Column(
+                                                    children: [
+                                                      ClipRRect(
+                                                        borderRadius: BorderRadius.circular(8),
+                                                        child: Image.network(
+                                                          'https://image.tmdb.org/t/p/w185${cast['profile_path']}',
+                                                          width: 80,
+                                                          height: 80,
+                                                          fit: BoxFit.cover,
+                                                          errorBuilder: (context, error, stackTrace) {
+                                                            return Container(
+                                                              width: 80,
+                                                              height: 80,
+                                                              color: Colors.grey[900],
+                                                              child: const Icon(
+                                                                Icons.person,
+                                                                color: Colors.white54,
+                                                                size: 40,
+                                                              ),
+                                                            );
+                                                          },
+                                                        ),
+                                                      ),
+                                                      const SizedBox(height: 4),
+                                                      Expanded(
+                                                        child: Text(
+                                                          cast['name'],
+                                                          textAlign: TextAlign.center,
+                                                          maxLines: 2,
+                                                          overflow: TextOverflow.ellipsis,
+                                                          style: const TextStyle(
+                                                            color: Colors.white70,
+                                                            fontSize: 12,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                );
+                                              },
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
                     ],
                   ),
                 ),

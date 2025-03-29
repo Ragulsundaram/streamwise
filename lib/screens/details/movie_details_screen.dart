@@ -33,6 +33,8 @@ class _MovieDetailsScreenState extends State<MovieDetailsScreen> {
   Future<void> _fetchMovieDetails() async {
     try {
       final details = await _tmdbService.getMediaDetails(widget.movieId, 'movie');
+      final credits = await _tmdbService.getMediaCredits(widget.movieId, 'movie');
+      details['credits'] = credits;
       
       // Get user profile and calculate match
       final username = context.read<AuthProvider>().username;
@@ -87,8 +89,11 @@ class _MovieDetailsScreenState extends State<MovieDetailsScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Backdrop Image and Details Section
+                      // !!! IMPORTANT: DO NOT MODIFY THESE VALUES !!!
+                      // These specific dimensions and spacing values are crucial for maintaining
+                      // consistent layout across different title lengths
                       SizedBox(
-                        height: MediaQuery.of(context).size.height * 0.4,
+                        height: MediaQuery.of(context).size.height * 0.35,
                         width: double.infinity,
                         child: Stack(
                           children: [
@@ -169,7 +174,7 @@ class _MovieDetailsScreenState extends State<MovieDetailsScreen> {
                               right: 16,
                               bottom: 16,
                               child: Column(
-                                mainAxisSize: MainAxisSize.min,
+                                mainAxisSize: MainAxisSize.min, // Important for consistent spacing
                                 crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
                                   Text(
@@ -239,7 +244,7 @@ class _MovieDetailsScreenState extends State<MovieDetailsScreen> {
                       
                       // Synopsis Section
                       Padding(
-                        padding: const EdgeInsets.fromLTRB(16.0, 4.0, 16.0, 16.0), // Reduced top padding from 16 to 4
+                        padding: const EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 0.0), // Adjusted padding
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -258,6 +263,89 @@ class _MovieDetailsScreenState extends State<MovieDetailsScreen> {
                                 color: Colors.white70,
                                 fontSize: 14,
                                 height: 1.5,
+                              ),
+                            ),
+                            const SizedBox(height: 16), // Reduced spacing
+                            Container(
+                              height: 1,
+                              color: Colors.white12,
+                            ),
+                          ],
+                        ),
+                      ),
+                      
+                      // Cast Section
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 16.0), // Adjusted padding
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                const Text(
+                                  'Cast',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w400,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                            SizedBox(
+                              height: 120,
+                              child: ListView.builder(
+                                scrollDirection: Axis.horizontal,
+                                itemCount: _movieDetails!['credits']['cast'].length,
+                                itemBuilder: (context, index) {
+                                  final cast = _movieDetails!['credits']['cast'][index];
+                                  return Container(
+                                    width: 80,
+                                    margin: EdgeInsets.only(
+                                      right: 12,
+                                      left: index == 0 ? 0 : 0,
+                                    ),
+                                    child: Column(
+                                      children: [
+                                        ClipRRect(
+                                          borderRadius: BorderRadius.circular(8),
+                                          child: Image.network(
+                                            'https://image.tmdb.org/t/p/w185${cast['profile_path']}',
+                                            width: 80,
+                                            height: 80,
+                                            fit: BoxFit.cover,
+                                            errorBuilder: (context, error, stackTrace) {
+                                              return Container(
+                                                width: 80,
+                                                height: 80,
+                                                color: Colors.grey[900],
+                                                child: const Icon(
+                                                  Icons.person,
+                                                  color: Colors.white54,
+                                                  size: 40,
+                                                ),
+                                              );
+                                            },
+                                          ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Expanded(
+                                          child: Text(
+                                            cast['name'],
+                                            textAlign: TextAlign.center,
+                                            maxLines: 2,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: const TextStyle(
+                                              color: Colors.white70,
+                                              fontSize: 12,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                },
                               ),
                             ),
                           ],
