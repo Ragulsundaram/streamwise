@@ -82,114 +82,109 @@ class _MovieDetailsScreenState extends State<MovieDetailsScreen> {
           ? const Center(child: CircularProgressIndicator())
           : _movieDetails == null
               ? const Center(child: Text('Failed to load movie details'))
-              : Stack(
-                  children: [
-                    // Backdrop Image and Details Overlay
-                    SizedBox(
-                      height: MediaQuery.of(context).size.height * 0.4,
-                      width: double.infinity,
-                      child: Stack(
-                        children: [
-                          ShaderMask(
-                            shaderCallback: (rect) {
-                              return LinearGradient(
-                                begin: Alignment.topCenter,
-                                end: Alignment.bottomCenter,
-                                colors: [
-                                  Colors.black,
-                                  Colors.black.withOpacity(0.5),
-                                  Colors.transparent,
-                                ],
-                                stops: const [0.0, 0.7, 1.0],
-                              ).createShader(rect);
-                            },
-                            blendMode: BlendMode.dstIn,
-                            child: Image.network(
-                              'https://image.tmdb.org/t/p/original${_movieDetails!['backdrop_path']}',
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) {
-                                return Container(
-                                  color: Colors.grey[900],
-                                  child: const Center(
-                                    child: Icon(
-                                      Icons.error_outline,
-                                      color: Colors.white54,
-                                      size: 48,
-                                    ),
-                                  ),
-                                );
+              : SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Backdrop Image and Details Section
+                      SizedBox(
+                        height: MediaQuery.of(context).size.height * 0.4,
+                        width: double.infinity,
+                        child: Stack(
+                          children: [
+                            ShaderMask(
+                              shaderCallback: (rect) {
+                                return LinearGradient(
+                                  begin: Alignment.topCenter,
+                                  end: Alignment.bottomCenter,
+                                  colors: [
+                                    Colors.black,
+                                    Colors.black.withOpacity(0.5),
+                                    Colors.transparent,
+                                  ],
+                                  stops: const [0.0, 0.7, 1.0],
+                                ).createShader(rect);
                               },
-                            ),
-                          ),
-                          // Keep only this match percentage overlay
-                          if (_matchPercentage != null)
-                            Positioned(
-                              top: 16,
-                              right: 16,
-                              child: MatcherService.buildMatchBadge(_matchPercentage!),
-                            ),
-                          // Add TMDB Rating
-                          Positioned(
-                            top: 16,
-                            left: 16,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 6,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.black.withOpacity(0.7),
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Row(
-                                children: [
-                                  const Icon(
-                                    Icons.star_rounded,
-                                    color: Colors.amber,
-                                    size: 20,
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    _movieDetails!['vote_average'].toStringAsFixed(1),
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                          // Movie Details Overlay
-                          Positioned(
-                            left: 16,
-                            right: 16,
-                            bottom: 16,
-                            child: SizedBox(
-                              height: 100, // Reduced height
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                mainAxisAlignment: MainAxisAlignment.start,
-                                children: [
-                                  Container(
-                                    constraints: const BoxConstraints(
-                                      minHeight: 30, // Reduced minimum height
-                                    ),
-                                    child: Text(
-                                      _movieDetails!['title'],
-                                      textAlign: TextAlign.center,
-                                      maxLines: 3,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.bold,
-                                        height: 1.2,
+                              blendMode: BlendMode.dstIn,
+                              child: Image.network(
+                                'https://image.tmdb.org/t/p/original${_movieDetails!['backdrop_path']}',
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return Container(
+                                    color: Colors.grey[900],
+                                    child: const Center(
+                                      child: Icon(
+                                        Icons.error_outline,
+                                        color: Colors.white54,
+                                        size: 48,
                                       ),
                                     ),
+                                  );
+                                },
+                              ),
+                            ),
+                            // Keep only this match percentage overlay
+                            if (_matchPercentage != null)
+                              Positioned(
+                                top: 16,
+                                right: 16,
+                                child: MatcherService.buildMatchBadge(_matchPercentage!),
+                              ),
+                            // Add TMDB Rating
+                            Positioned(
+                              top: 16,
+                              left: 16,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 6,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.black.withOpacity(0.7),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Row(
+                                  children: [
+                                    const Icon(
+                                      Icons.star_rounded,
+                                      color: Colors.amber,
+                                      size: 20,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      _movieDetails!['vote_average'].toStringAsFixed(1),
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            // Movie Details Overlay
+                            Positioned(
+                              left: 16,
+                              right: 16,
+                              bottom: 16,
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    _movieDetails!['title'],
+                                    textAlign: TextAlign.center,
+                                    maxLines: 3,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                      height: 1.2,
+                                    ),
                                   ),
-                                  const SizedBox(height: 4), // Reduced spacing
+                                  const SizedBox(height: 8),
                                   Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
@@ -238,19 +233,38 @@ class _MovieDetailsScreenState extends State<MovieDetailsScreen> {
                                 ],
                               ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
-                    
-                    // Remove this entire block to fix the duplication
-                    // if (_matchPercentage != null)
-                    //   Positioned(
-                    //     top: MediaQuery.of(context).padding.top + 16,
-                    //     right: 16,
-                    //     child: MatcherService.buildMatchBadge(_matchPercentage!),
-                    //   ),
-                  ],
+                      
+                      // Synopsis Section
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16.0, 4.0, 16.0, 16.0), // Reduced top padding from 16 to 4
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Synopsis',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 18,
+                                fontWeight: FontWeight.w400,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              _movieDetails!['overview'] ?? 'No synopsis available.',
+                              style: const TextStyle(
+                                color: Colors.white70,
+                                fontSize: 14,
+                                height: 1.5,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
     );
   }
