@@ -3,6 +3,7 @@ import 'package:iconsax/iconsax.dart';
 import '../../constants/colors.dart';
 import '../../providers/auth_provider.dart';
 import 'package:provider/provider.dart';
+import 'watched/watched_screen.dart';  // Add this import
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -138,13 +139,20 @@ class ProfileScreen extends StatelessWidget {
                   children: [
                     Expanded(
                       child: ElevatedButton.icon(
-                        onPressed: () {},
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const WatchedScreen(),
+                            ),
+                          );
+                        },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.black26, // Darkened slightly
+                          backgroundColor: Colors.black26,
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(
                             horizontal: 16,
-                            vertical: 16, // Increased height
+                            vertical: 16,
                           ),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
