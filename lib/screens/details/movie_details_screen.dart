@@ -89,11 +89,8 @@ class _MovieDetailsScreenState extends State<MovieDetailsScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Backdrop Image and Details Section
-                      // !!! IMPORTANT: DO NOT MODIFY THESE VALUES !!!
-                      // These specific dimensions and spacing values are crucial for maintaining
-                      // consistent layout across different title lengths
                       SizedBox(
-                        height: MediaQuery.of(context).size.height * 0.35,
+                        height: MediaQuery.of(context).size.height * 0.35, // Reduced height
                         width: double.infinity,
                         child: Stack(
                           children: [

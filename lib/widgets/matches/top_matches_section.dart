@@ -38,24 +38,20 @@ class _TopMatchesSectionState extends State<TopMatchesSection> {
   @override
   void initState() {
     super.initState();
+    // Load both movies and TV shows on init
     _fetchTopMatches();
+    _fetchTopMatches(isMovieOverride: false);
   }
 
-  @override
-  void dispose() {
-    _scrollController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _fetchTopMatches({bool forceRefresh = false}) async {
-    final currentMediaType = isMovie ? 'movie' : 'tv';
-    final currentList = isMovie ? _moviesList : _tvList;
+  Future<void> _fetchTopMatches({bool forceRefresh = false, bool? isMovieOverride}) async {
+    final currentMediaType = (isMovieOverride ?? isMovie) ? 'movie' : 'tv';
+    final currentList = (isMovieOverride ?? isMovie) ? _moviesList : _tvList;
     
     if ((_isLoading && !forceRefresh) || _currentActiveMediaType == currentMediaType) return;
     
     setState(() {
       _currentActiveMediaType = currentMediaType;
-      if (isMovie) {
+      if (isMovieOverride ?? isMovie) {
         _isLoadingMovies = true;
         if (forceRefresh) _moviesList = [];
       } else {
@@ -73,7 +69,7 @@ class _TopMatchesSectionState extends State<TopMatchesSection> {
         onMatchCalculated: (MediaItem item) {
           if (mounted && currentMediaType == _currentActiveMediaType) {
             setState(() {
-              if (isMovie) {
+              if (isMovieOverride ?? isMovie) {
                 _moviesList = [..._moviesList, item]
                   ..sort((a, b) => (b.matchPercentage ?? 0).compareTo(a.matchPercentage ?? 0));
               } else {
@@ -89,7 +85,7 @@ class _TopMatchesSectionState extends State<TopMatchesSection> {
     } finally {
       if (mounted && currentMediaType == _currentActiveMediaType) {
         setState(() {
-          if (isMovie) {
+          if (isMovieOverride ?? isMovie) {
             _isLoadingMovies = false;
           } else {
             _isLoadingTV = false;
@@ -99,6 +95,14 @@ class _TopMatchesSectionState extends State<TopMatchesSection> {
       }
     }
   }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  
 
   Widget _buildMediaTypeToggle(bool isMovieToggle, String text) {
     final isSelected = isMovie == isMovieToggle;
@@ -118,14 +122,14 @@ class _TopMatchesSectionState extends State<TopMatchesSection> {
         ),
         decoration: BoxDecoration(
           color: isSelected ? AppColors.primary : Colors.transparent,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(16),
         ),
         child: Text(
           text,
           style: TextStyle(
             color: isSelected ? Colors.black : Colors.white,
-            fontSize: 14,
-            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+            fontWeight: FontWeight.w500,
+            fontSize: 12,
           ),
         ),
       ),
