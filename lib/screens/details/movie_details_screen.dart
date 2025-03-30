@@ -95,9 +95,10 @@ class _MovieDetailsScreenState extends State<MovieDetailsScreen> {
                     children: [
                       // Backdrop Image and Details Section
                       SizedBox(
-                        height: MediaQuery.of(context).size.height * 0.35, // Reduced height
-                        width: double.infinity,
+                        height: MediaQuery.of(context).size.height * 0.35,
+                        width: MediaQuery.of(context).size.width, // Make width responsive
                         child: Stack(
+                          fit: StackFit.expand, // Ensure stack fills the available space
                           children: [
                             ShaderMask(
                               shaderCallback: (rect) {

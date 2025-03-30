@@ -1,3 +1,4 @@
+// Update imports
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:iconsax/iconsax.dart';
@@ -5,7 +6,9 @@ import '../constants/colors.dart';
 import '../widgets/common/app_logo.dart';
 import '../providers/auth_provider.dart';
 import 'login_screen.dart';
-import 'discover/discover_screen.dart';  // Add this import
+import 'discover/discover_screen.dart';
+
+import 'profile/profile_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -18,10 +21,16 @@ class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
 
   final List<Widget> _screens = [
-    const DiscoverScreen(),  // This will now use the correct implementation
+    const DiscoverScreen(),
     const SearchScreen(),
-    const ProfileScreen(),
+    const ProfileScreen(),  // Add back ProfileScreen
   ];
+
+  void _handleNavigation(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -73,11 +82,7 @@ class _HomeScreenState extends State<HomeScreen> {
           height: 65,
           labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
           selectedIndex: _selectedIndex,
-          onDestinationSelected: (int index) {
-            setState(() {
-              _selectedIndex = index;
-            });
-          },
+          onDestinationSelected: _handleNavigation,  // Update this line
           destinations: [
             NavigationDestination(
               icon: Icon(
@@ -134,16 +139,4 @@ class SearchScreen extends StatelessWidget {
   }
 }
 
-class ProfileScreen extends StatelessWidget {
-  const ProfileScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const Center(
-      child: Text(
-        'Profile Screen',
-        style: TextStyle(color: Colors.white),
-      ),
-    );
-  }
-}
+// Remove the ProfileScreen class from this file since it's now in its own file

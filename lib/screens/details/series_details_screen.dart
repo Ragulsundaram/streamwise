@@ -96,8 +96,9 @@ class _SeriesDetailsScreenState extends State<SeriesDetailsScreen> {
                       // consistent layout across different title lengths
                       SizedBox(
                         height: MediaQuery.of(context).size.height * 0.35,
-                        width: double.infinity,
+                        width: MediaQuery.of(context).size.width, // Make width responsive
                         child: Stack(
+                          fit: StackFit.expand, // Ensure stack fills the available space
                           children: [
                             ShaderMask(
                               shaderCallback: (rect) {
