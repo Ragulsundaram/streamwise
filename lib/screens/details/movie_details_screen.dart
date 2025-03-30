@@ -241,7 +241,7 @@ class _MovieDetailsScreenState extends State<MovieDetailsScreen> {
                       
                       // Synopsis Section
                       Padding(
-                        padding: const EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 0.0), // Adjusted padding
+                        padding: const EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 0.0),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -262,7 +262,31 @@ class _MovieDetailsScreenState extends State<MovieDetailsScreen> {
                                 height: 1.5,
                               ),
                             ),
-                            const SizedBox(height: 16), // Reduced spacing
+                            const SizedBox(height: 16),
+                            // Add Director section here
+                            Row(
+                              children: [
+                                const Text(
+                                  'Director: ',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                Text(
+                                  _movieDetails!['credits']['crew']
+                                      .where((crew) => crew['job'] == 'Director')
+                                      .map((director) => director['name'])
+                                      .join(', '),
+                                  style: const TextStyle(
+                                    color: Colors.white70,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
                             Container(
                               height: 1,
                               color: Colors.white12,
