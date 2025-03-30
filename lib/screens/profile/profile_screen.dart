@@ -17,7 +17,7 @@ class ProfileScreen extends StatelessWidget {
       child: Column(
         children: [
           SizedBox(
-            height: MediaQuery.of(context).size.height * 0.35,
+            height: MediaQuery.of(context).size.height * 0.25, // Reduced height
             width: MediaQuery.of(context).size.width,
             child: Stack(
               fit: StackFit.expand,
@@ -31,14 +31,14 @@ class ProfileScreen extends StatelessWidget {
                         AppColors.primary.withOpacity(0.6),
                         AppColors.background,
                       ],
-                      stops: const [0.05, 0.6],  // Adjusted to stop at container
+                      stops: const [0.02, 0.9],
                     ),
                   ),
                 ),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 24.0),
                   child: Container(
-                    margin: const EdgeInsets.only(bottom: 120),  // Updated margin
+                    margin: const EdgeInsets.only(bottom: 20), // Reduced bottom margin
                     padding: const EdgeInsets.all(20),
                     alignment: Alignment.bottomLeft,
                     decoration: BoxDecoration(
@@ -81,6 +81,7 @@ class ProfileScreen extends StatelessWidget {
                                   style: TextStyle(
                                     color: Colors.white.withOpacity(0.7),
                                     fontSize: 12,
+                                    decoration: TextDecoration.none, // Remove underline
                                   ),
                                 ),
                                 const SizedBox(height: 4),
@@ -89,6 +90,7 @@ class ProfileScreen extends StatelessWidget {
                                   style: const TextStyle(
                                     color: Colors.white,
                                     fontSize: 18,
+                                    decoration: TextDecoration.none, // Remove underline
                                   ),
                                 ),
                                 const SizedBox(height: 4),
@@ -123,6 +125,81 @@ class ProfileScreen extends StatelessWidget {
                         ),
                       ],
                     ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24.0, 0, 24.0, 24.0), // Removed top padding
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () {},
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.black26, // Darkened slightly
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 16, // Increased height
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        icon: const Icon(Iconsax.play_circle, size: 20),
+                        label: const Text(
+                          'Watched',
+                          style: TextStyle(fontSize: 14),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () {},
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.black12,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        icon: const Icon(Iconsax.heart, size: 20),
+                        label: const Text(
+                          'Liked',
+                          style: TextStyle(fontSize: 14),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                ElevatedButton.icon(
+                  onPressed: () {},
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.black12,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                    minimumSize: const Size(double.infinity, 48),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  icon: const Icon(Iconsax.save_2, size: 20),
+                  label: const Text(
+                    'Saved',
+                    style: TextStyle(fontSize: 14),
                   ),
                 ),
               ],
