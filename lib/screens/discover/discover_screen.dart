@@ -9,6 +9,7 @@ import '../../providers/auth_provider.dart';
 import '../details/movie_details_screen.dart';
 import '../details/series_details_screen.dart';
 import '../../widgets/matches/top_matches_section.dart';
+import '../../widgets/media/media_card.dart';  // Add this import
 
 class DiscoverScreen extends StatefulWidget {
   const DiscoverScreen({super.key});
@@ -238,67 +239,10 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
   }
 
   Widget _buildMediaCard(MediaItem item) {
-    return GestureDetector(
-      onTap: () => _onMediaTap(item.id, item.mediaType),
-      child: Padding(
-        padding: const EdgeInsets.only(right: 12),
-        child: SizedBox(
-          width: 140,
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: AspectRatio(
-              aspectRatio: 2/3,
-              child: Stack(
-                children: [
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.1),
-                      image: DecorationImage(
-                        image: NetworkImage(item.posterPath),
-                        fit: BoxFit.cover,
-                        onError: (_, __) {},
-                      ),
-                    ),
-                  ),
-                  if (item.voteAverage > 0.0 && !item.voteAverage.isNaN)
-                    Positioned(
-                      top: 8,
-                      left: 8,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(0.7),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Row(
-                          children: [
-                            const Icon(
-                              Iconsax.star1,
-                              color: Colors.amber,
-                              size: 14,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              item.voteAverage.toStringAsFixed(1),
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
+    return MediaCard(
+      item: item,
+      width: 140,
+      margin: const EdgeInsets.only(right: 12),
     );
   }
 
