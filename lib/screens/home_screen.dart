@@ -23,22 +23,13 @@ class _HomeScreenState extends State<HomeScreen> {
   final List<Widget> _screens = [
     const DiscoverScreen(),
     const SearchScreen(),
-  ];  // Remove ProfileScreen from _screens
+    const ProfileScreen(),  // Add ProfileScreen back to the list
+  ];
 
   void _handleNavigation(int index) {
-    if (index == 2) {
-      // Navigate to Profile screen
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => const ProfileScreen(),
-        ),
-      );
-    } else {
-      setState(() {
-        _selectedIndex = index;
-      });
-    }
+    setState(() {
+      _selectedIndex = index;  // Simply update the index
+    });
   }
 
   @override
