@@ -293,13 +293,8 @@ class _SeriesDetailsScreenState extends State<SeriesDetailsScreen> {
                                             ),
                                           ],
                                         ),
-                                        const SizedBox(height: 16),
-                                        Container(
-                                          height: 1,
-                                          color: Colors.white12,
-                                        ),
-                                        // Add Action Buttons here
                                         const SizedBox(height: 24),
+                                        // Action Buttons Row
                                         Row(
                                           mainAxisAlignment: MainAxisAlignment.center,
                                           children: [
@@ -462,6 +457,12 @@ class _SeriesDetailsScreenState extends State<SeriesDetailsScreen> {
                                           ],
                                         ),
                                         const SizedBox(height: 24),
+                                        // Add the divider line here
+                                        Container(
+                                          height: 1,
+                                          color: Colors.white12,
+                                        ),
+                                        const SizedBox(height: 16),
                                       ],
                                     ),
                                   ),
