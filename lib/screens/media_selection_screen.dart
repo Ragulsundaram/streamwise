@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';  // Add this
 import '../models/media_item.dart';
+import '../models/watch/watched_item.dart';
 import '../services/tmdb_service.dart';
 import '../services/profile_service.dart';
 import '../constants/colors.dart';
@@ -170,7 +171,6 @@ class _MediaSelectionScreenState extends State<MediaSelectionScreen> {
       return;
     }
 
-    // Show loading dialog
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -204,13 +204,20 @@ class _MediaSelectionScreenState extends State<MediaSelectionScreen> {
     );
 
     try {
-      final profileService = ProfileService(_tmdbService);
-      final profile = await profileService.generateProfile(selectedItems);
-      
       final authProvider = context.read<AuthProvider>();
       final username = authProvider.username;
       
       if (username != null && username.isNotEmpty) {
+        // Save selected items as watched
+        final watchedItems = selectedItems.map((item) => 
+          WatchedItem.fromMediaItem(item)).toList();
+        final saved = await WatchedItem.saveWatchedItems(username, watchedItems);
+        print('Saved watched items: ${watchedItems.length} items, success: $saved'); // Debug print
+
+        // Continue with existing taste profile generation
+        final profileService = ProfileService(_tmdbService);
+        final profile = await profileService.generateProfile(selectedItems);
+        
         final prefs = await SharedPreferences.getInstance();
         final profileJson = jsonEncode(profile.toJson());
         await prefs.setString('user_taste_profile_$username', profileJson);
