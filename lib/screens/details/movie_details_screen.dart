@@ -265,6 +265,7 @@ class _MovieDetailsScreenState extends State<MovieDetailsScreen> {
                             const SizedBox(height: 16),
                             // Add Director section here
                             Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 const Text(
                                   'Director: ',
@@ -274,14 +275,16 @@ class _MovieDetailsScreenState extends State<MovieDetailsScreen> {
                                     fontWeight: FontWeight.w500,
                                   ),
                                 ),
-                                Text(
-                                  _movieDetails!['credits']['crew']
-                                      .where((crew) => crew['job'] == 'Director')
-                                      .map((director) => director['name'])
-                                      .join(', '),
-                                  style: const TextStyle(
-                                    color: Colors.white70,
-                                    fontSize: 14,
+                                Expanded(
+                                  child: Text(
+                                    _movieDetails!['credits']['crew']
+                                        .where((crew) => crew['job'] == 'Director')
+                                        .map((director) => director['name'])
+                                        .join(', '),
+                                    style: const TextStyle(
+                                      color: Colors.white70,
+                                      fontSize: 14,
+                                    ),
                                   ),
                                 ),
                               ],
