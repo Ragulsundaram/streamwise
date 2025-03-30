@@ -28,19 +28,19 @@ class ProfileScreen extends StatelessWidget {
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
                       colors: [
-                        AppColors.primary.withOpacity(0.6),  // Made more transparent
-                        AppColors.background,  // Removed opacity for smoother blend
+                        AppColors.primary.withOpacity(0.6),
+                        AppColors.background,
                       ],
-                      stops: const [0.1, 0.75],  // Adjusted gradient stops
+                      stops: const [0.05, 0.6],  // Adjusted to stop at container
                     ),
                   ),
                 ),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 24.0),
                   child: Container(
-                    margin: const EdgeInsets.only(bottom: 70),  // Changed from top to bottom
+                    margin: const EdgeInsets.only(bottom: 120),  // Updated margin
                     padding: const EdgeInsets.all(20),
-                    alignment: Alignment.bottomLeft,  // Added alignment
+                    alignment: Alignment.bottomLeft,
                     decoration: BoxDecoration(
                       color: Colors.black.withOpacity(0),
                       borderRadius: BorderRadius.circular(16),
