@@ -5,6 +5,7 @@ import '../../services/matcher_service.dart';
 import '../../models/profile/taste_profile.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
+import 'package:iconsax/iconsax.dart'; // Add this import
 
 class SeriesDetailsScreen extends StatefulWidget {
   final int seriesId;
@@ -23,6 +24,10 @@ class _SeriesDetailsScreenState extends State<SeriesDetailsScreen> {
   bool _isLoading = true;
   Map<String, dynamic>? _seriesDetails;
   double? _matchPercentage;
+  // Add these state variables
+  bool _isLiked = false;
+  bool _isDisliked = false;
+  bool _isSaved = false;
 
   @override
   void initState() {
@@ -293,6 +298,170 @@ class _SeriesDetailsScreenState extends State<SeriesDetailsScreen> {
                                           height: 1,
                                           color: Colors.white12,
                                         ),
+                                        // Add Action Buttons here
+                                        const SizedBox(height: 24),
+                                        Row(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: [
+                                            // Share Button
+                                            Padding(
+                                              padding: const EdgeInsets.symmetric(horizontal: 16),
+                                              child: Column(
+                                                children: [
+                                                  Container(
+                                                    width: 42,
+                                                    height: 42,
+                                                    decoration: BoxDecoration(
+                                                      shape: BoxShape.circle,
+                                                      border: Border.all(
+                                                        color: Colors.white24,
+                                                        width: 1,
+                                                      ),
+                                                    ),
+                                                    child: IconButton(
+                                                      icon: const Icon(
+                                                        Iconsax.share,
+                                                        color: Colors.white,
+                                                        size: 20,
+                                                      ),
+                                                      onPressed: () {
+                                                        // Handle share
+                                                      },
+                                                    ),
+                                                  ),
+                                                  const SizedBox(height: 8),
+                                                  const Text(
+                                                    'Share',
+                                                    style: TextStyle(
+                                                      color: Colors.white70,
+                                                      fontSize: 12,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                            // Like Button
+                                            Padding(
+                                              padding: const EdgeInsets.symmetric(horizontal: 16),
+                                              child: Column(
+                                                children: [
+                                                  Container(
+                                                    width: 42,
+                                                    height: 42,
+                                                    decoration: BoxDecoration(
+                                                      shape: BoxShape.circle,
+                                                      border: Border.all(
+                                                        color: _isLiked ? AppColors.primary : Colors.white24,
+                                                        width: 1,
+                                                      ),
+                                                    ),
+                                                    child: IconButton(
+                                                      icon: Icon(
+                                                        _isLiked ? Iconsax.like_15 : Iconsax.like_1,
+                                                        color: _isLiked ? AppColors.primary : Colors.white,
+                                                        size: 20,
+                                                      ),
+                                                      onPressed: () {
+                                                        setState(() {
+                                                          if (_isDisliked) _isDisliked = false;
+                                                          _isLiked = !_isLiked;
+                                                        });
+                                                      },
+                                                    ),
+                                                  ),
+                                                  const SizedBox(height: 8),
+                                                  Text(
+                                                    'Like',
+                                                    style: TextStyle(
+                                                      color: _isLiked ? AppColors.primary : Colors.white70,
+                                                      fontSize: 12,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                            // Dislike Button
+                                            Padding(
+                                              padding: const EdgeInsets.symmetric(horizontal: 16),
+                                              child: Column(
+                                                children: [
+                                                  Container(
+                                                    width: 42,
+                                                    height: 42,
+                                                    decoration: BoxDecoration(
+                                                      shape: BoxShape.circle,
+                                                      border: Border.all(
+                                                        color: _isDisliked ? AppColors.primary : Colors.white24,
+                                                        width: 1,
+                                                      ),
+                                                    ),
+                                                    child: IconButton(
+                                                      icon: Icon(
+                                                        _isDisliked ? Iconsax.dislike5 : Iconsax.dislike,
+                                                        color: _isDisliked ? AppColors.primary : Colors.white,
+                                                        size: 20,
+                                                      ),
+                                                      onPressed: () {
+                                                        setState(() {
+                                                          if (_isLiked) _isLiked = false;
+                                                          _isDisliked = !_isDisliked;
+                                                        });
+                                                      },
+                                                    ),
+                                                  ),
+                                                  const SizedBox(height: 8),
+                                                  Text(
+                                                    'Dislike',
+                                                    style: TextStyle(
+                                                      color: _isDisliked ? AppColors.primary : Colors.white70,
+                                                      fontSize: 12,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                            // Save Button
+                                            Padding(
+                                              padding: const EdgeInsets.symmetric(horizontal: 16),
+                                              child: Column(
+                                                children: [
+                                                  Container(
+                                                    width: 42,
+                                                    height: 42,
+                                                    decoration: BoxDecoration(
+                                                      shape: BoxShape.circle,
+                                                      border: Border.all(
+                                                        color: _isSaved ? AppColors.primary : Colors.white24,
+                                                        width: 1,
+                                                      ),
+                                                    ),
+                                                    child: IconButton(
+                                                      icon: Icon(
+                                                        _isSaved ? Iconsax.archive_add1 : Iconsax.archive_add,
+                                                        color: _isSaved ? AppColors.primary : Colors.white,
+                                                        size: 20,
+                                                      ),
+                                                      onPressed: () {
+                                                        setState(() {
+                                                          _isSaved = !_isSaved;
+                                                        });
+                                                      },
+                                                    ),
+                                                  ),
+                                                  const SizedBox(height: 8),
+                                                  Text(
+                                                    'Save',
+                                                    style: TextStyle(
+                                                      color: _isSaved ? AppColors.primary : Colors.white70,
+                                                      fontSize: 12,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 24),
                                       ],
                                     ),
                                   ),
