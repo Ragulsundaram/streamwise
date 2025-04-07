@@ -108,17 +108,24 @@ class AuthProvider with ChangeNotifier {
       final usersJson = prefs.getString(_userKey);
       if (usersJson != null) {
         final users = Map<String, dynamic>.from(jsonDecode(usersJson));
-        // Delete taste profiles for all users
+        // Delete profiles and history for all users
         for (var user in users.values) {
           if (user['username'] != null) {
-            await TasteProfile.deleteProfile(user['username']);
+            final username = user['username'];
+            // Clear taste profile
+            await TasteProfile.deleteProfile(username);
+            // Clear liked items
+            await prefs.remove('liked_items_$username');
+            // Clear watched items
+            await prefs.remove('watched_items_$username');
+            debugPrint('Cleared all data for user: $username');
           }
         }
       }
       // Clear user data
       await prefs.remove(_userKey);
       await prefs.remove(_currentUserKey);
-      debugPrint('All users and their taste profiles cleared');
+      debugPrint('All users and their data cleared');
     } catch (e) {
       debugPrint('Error clearing users: $e');
     }

@@ -6,7 +6,8 @@ import '../../models/profile/taste_profile.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import 'package:iconsax/iconsax.dart'; // Add this import
-import '../../models/likes/liked_item.dart';  // Add this import
+import '../../models/likes/liked_item.dart'; 
+import '../../models/watch/watched_item.dart';  // Add this import
 
 class SeriesDetailsScreen extends StatefulWidget {
   final int seriesId;
@@ -59,11 +60,29 @@ class _SeriesDetailsScreenState extends State<SeriesDetailsScreen> {
     setState(() => _isLiked = !_isLiked);
 
     if (_isLiked) {
+      // Add to liked items
       _likedItems.add(LikedItem(
         id: widget.seriesId,
         mediaType: 'tv',
         likedAt: DateTime.now(),
       ));
+
+      // Add to watched items
+      if (_seriesDetails != null) {
+        final watchedItem = WatchedItem(
+          id: widget.seriesId,
+          title: _seriesDetails!['name'],
+          posterPath: 'https://image.tmdb.org/t/p/w500${_seriesDetails!['poster_path']}',
+          mediaType: 'tv',
+          watchedAt: DateTime.now(),
+          voteAverage: (_seriesDetails!['vote_average'] as num).toDouble(),
+        );
+        final watchedItems = await WatchedItem.loadWatchedItems(_username!);
+        if (!watchedItems.any((item) => item.id == widget.seriesId && item.mediaType == 'tv')) {
+          watchedItems.add(watchedItem);
+          await WatchedItem.saveWatchedItems(_username!, watchedItems);
+        }
+      }
     } else {
       _likedItems.removeWhere((item) => 
         item.id == widget.seriesId && item.mediaType == 'tv');

@@ -7,6 +7,9 @@ import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import 'package:iconsax/iconsax.dart';
 import '../../models/likes/liked_item.dart';
+import '../../models/watch/watched_item.dart';  // Add this import
+
+
 
 class MovieDetailsScreen extends StatefulWidget {
   final int movieId;
@@ -57,11 +60,29 @@ class _MovieDetailsScreenState extends State<MovieDetailsScreen> {
     setState(() => _isLiked = !_isLiked);
 
     if (_isLiked) {
+      // Add to liked items
       _likedItems.add(LikedItem(
         id: widget.movieId,
         mediaType: 'movie',
         likedAt: DateTime.now(),
       ));
+
+      // Add to watched items
+      if (_movieDetails != null) {
+        final watchedItem = WatchedItem(
+          id: widget.movieId,
+          title: _movieDetails!['title'],
+          posterPath: 'https://image.tmdb.org/t/p/w500${_movieDetails!['poster_path']}',
+          mediaType: 'movie',
+          watchedAt: DateTime.now(),
+          voteAverage: (_movieDetails!['vote_average'] as num).toDouble(),
+        );
+        final watchedItems = await WatchedItem.loadWatchedItems(_username!);
+        if (!watchedItems.any((item) => item.id == widget.movieId && item.mediaType == 'movie')) {
+          watchedItems.add(watchedItem);
+          await WatchedItem.saveWatchedItems(_username!, watchedItems);
+        }
+      }
     } else {
       _likedItems.removeWhere((item) => 
         item.id == widget.movieId && item.mediaType == 'movie');

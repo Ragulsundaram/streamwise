@@ -97,7 +97,9 @@ class TMDBService {
     final cacheKey = mediaType;
     final now = DateTime.now();
 
-    debugPrint('🔍 Starting getTopMatches - ForceRefresh: $forceRefresh, MediaType: $mediaType');
+    if (kDebugMode) {
+      debugPrint('🔍 Starting getTopMatches - ForceRefresh: $forceRefresh, MediaType: $mediaType');
+    }
 
     // Only use cache if not force refreshing
     if (!forceRefresh && _topMatchesCache.containsKey(cacheKey)) {
