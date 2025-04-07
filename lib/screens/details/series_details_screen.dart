@@ -11,10 +11,12 @@ import '../../models/watch/watched_item.dart';  // Add this import
 
 class SeriesDetailsScreen extends StatefulWidget {
   final int seriesId;
+  final VoidCallback? onLikeToggled; // Add this
 
   const SeriesDetailsScreen({
     super.key,
     required this.seriesId,
+    this.onLikeToggled, // Add this
   });
 
   @override
@@ -56,16 +58,32 @@ class _SeriesDetailsScreenState extends State<SeriesDetailsScreen> {
 
   Future<void> _toggleLike() async {
     if (_username == null) return;
+    debugPrint('Toggling like for series ${widget.seriesId}. Current state: $_isLiked');
 
-    setState(() => _isLiked = !_isLiked);
+    final isLikedScreen = ModalRoute.of(context)?.settings.name == '/liked';
+    final newLikeState = !_isLiked;
+    
+    if (!newLikeState && isLikedScreen) {
+      debugPrint('Unliking from liked screen');
+      widget.onLikeToggled?.call();
+      if (mounted) Navigator.pop(context);
+      
+      _likedItems.removeWhere((item) => 
+        item.id == widget.seriesId && item.mediaType == 'tv');
+      await LikedItem.saveLikedItems(_username!, _likedItems);
+      debugPrint('Saved unliked state');
+      return;
+    }
 
-    if (_isLiked) {
-      // Add to liked items
+    setState(() => _isLiked = newLikeState);
+    
+    if (newLikeState) {
       _likedItems.add(LikedItem(
         id: widget.seriesId,
         mediaType: 'tv',
         likedAt: DateTime.now(),
       ));
+      debugPrint('Added series ${widget.seriesId} to liked items');
 
       // Add to watched items
       if (_seriesDetails != null) {
@@ -86,10 +104,11 @@ class _SeriesDetailsScreenState extends State<SeriesDetailsScreen> {
     } else {
       _likedItems.removeWhere((item) => 
         item.id == widget.seriesId && item.mediaType == 'tv');
+      await LikedItem.saveLikedItems(_username!, _likedItems);
     }
 
     if (_isDisliked) setState(() => _isDisliked = false);
-    await LikedItem.saveLikedItems(_username!, _likedItems);
+    if (!isLikedScreen) widget.onLikeToggled?.call();
   }
 
   Future<void> _fetchSeriesDetails() async {

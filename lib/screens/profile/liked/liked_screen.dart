@@ -28,10 +28,15 @@ class _LikedScreenState extends State<LikedScreen> {
   }
 
   Future<void> _loadLikedContent() async {
+    debugPrint('Loading liked content...');
     final username = context.read<AuthProvider>().username;
-    if (username == null) return;
+    if (username == null) {
+      debugPrint('No username found, skipping load');
+      return;
+    }
 
     final likedItems = await LikedItem.loadLikedItems(username);
+    debugPrint('Loaded ${likedItems.length} liked items for user: $username');
     final contentDetails = <Map<String, dynamic>>[];
 
     for (var item in likedItems) {
@@ -41,6 +46,7 @@ class _LikedScreenState extends State<LikedScreen> {
           ...details,
           'mediaType': item.mediaType,
         });
+        debugPrint('Loaded details for ${item.mediaType} ${item.id}');
       } catch (e) {
         debugPrint('Error loading details for ${item.mediaType} ${item.id}: $e');
       }
@@ -50,17 +56,52 @@ class _LikedScreenState extends State<LikedScreen> {
       setState(() {
         _likedContent = contentDetails;
         _isLoading = false;
+        debugPrint('Updated liked content: ${_likedContent.length} items');
       });
     }
   }
 
   void _onMediaTap(int id, String mediaType) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => mediaType == 'movie'
-            ? MovieDetailsScreen(movieId: id)
-            : SeriesDetailsScreen(seriesId: id),
+    debugPrint('Tapped media: $mediaType $id');
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.9,
+        minChildSize: 0.5,
+        maxChildSize: 0.9,
+        builder: (_, controller) => Container(
+          decoration: const BoxDecoration(
+            color: AppColors.background,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: mediaType == 'movie'
+              ? MovieDetailsScreen(
+                  movieId: id,
+                  onLikeToggled: () {
+                    debugPrint('Movie unlike triggered in liked screen');
+                    setState(() {
+                      _likedContent.removeWhere((item) => 
+                        item['id'] == id && item['mediaType'] == mediaType);
+                      debugPrint('Removed movie from UI immediately, remaining: ${_likedContent.length}');
+                    });
+                    Navigator.pop(context);
+                  },
+                )
+              : SeriesDetailsScreen(
+                  seriesId: id,
+                  onLikeToggled: () {
+                    debugPrint('Series unlike triggered in liked screen');
+                    setState(() {
+                      _likedContent.removeWhere((item) => 
+                        item['id'] == id && item['mediaType'] == mediaType);
+                      debugPrint('Removed series from UI immediately, remaining: ${_likedContent.length}');
+                    });
+                    Navigator.pop(context);
+                  },
+                ),
+        ),
       ),
     );
   }
@@ -93,18 +134,21 @@ class _LikedScreenState extends State<LikedScreen> {
                   itemCount: _likedContent.length,
                   itemBuilder: (context, index) {
                     final item = _likedContent[index];
-                    return MediaCard(
-                      item: MediaItem(
-                        id: item['id'],
-                        title: item['mediaType'] == 'movie' ? item['title'] : item['name'],
-                        posterPath: item['poster_path'] != null 
-                            ? 'https://image.tmdb.org/t/p/w500${item['poster_path']}'
-                            : 'https://via.placeholder.com/500x750',
-                        mediaType: item['mediaType'],
-                        voteAverage: (item['vote_average'] as num?)?.toDouble() ?? 0.0,
+                    return GestureDetector(
+                      onTap: () => _onMediaTap(item['id'], item['mediaType']),
+                      child: MediaCard(
+                        item: MediaItem(
+                          id: item['id'],
+                          title: item['mediaType'] == 'movie' ? item['title'] : item['name'],
+                          posterPath: item['poster_path'] != null 
+                              ? 'https://image.tmdb.org/t/p/w500${item['poster_path']}'
+                              : 'https://via.placeholder.com/500x750',
+                          mediaType: item['mediaType'],
+                          voteAverage: (item['vote_average'] as num?)?.toDouble() ?? 0.0,
+                        ),
+                        width: double.infinity,
+                        margin: EdgeInsets.zero,
                       ),
-                      width: double.infinity,
-                      margin: EdgeInsets.zero,
                     );
                   },
                 ),
