@@ -6,6 +6,7 @@ import '../../models/profile/taste_profile.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import 'package:iconsax/iconsax.dart';
+import '../../models/likes/liked_item.dart';
 
 class MovieDetailsScreen extends StatefulWidget {
   final int movieId;
@@ -28,12 +29,50 @@ class _MovieDetailsScreenState extends State<MovieDetailsScreen> {
   bool _isLiked = false;
   bool _isDisliked = false;
   bool _isSaved = false;
+  List<LikedItem> _likedItems = [];
+  String? _username;
 
   @override
   void initState() {
     super.initState();
+    _username = context.read<AuthProvider>().username;
     _fetchMovieDetails();
+    _loadLikedState();
   }
+
+  Future<void> _loadLikedState() async {
+    if (_username != null) {
+      final likedItems = await LikedItem.loadLikedItems(_username!);
+      setState(() {
+        _likedItems = likedItems;
+        _isLiked = likedItems.any((item) => 
+          item.id == widget.movieId && item.mediaType == 'movie');
+      });
+    }
+  }
+
+  Future<void> _toggleLike() async {
+    if (_username == null) return;
+
+    setState(() => _isLiked = !_isLiked);
+
+    if (_isLiked) {
+      _likedItems.add(LikedItem(
+        id: widget.movieId,
+        mediaType: 'movie',
+        likedAt: DateTime.now(),
+      ));
+    } else {
+      _likedItems.removeWhere((item) => 
+        item.id == widget.movieId && item.mediaType == 'movie');
+    }
+
+    if (_isDisliked) setState(() => _isDisliked = false);
+    await LikedItem.saveLikedItems(_username!, _likedItems);
+  }
+
+  // Find the like button's onPressed callback and replace it with:
+
 
   Future<void> _fetchMovieDetails() async {
     try {
@@ -358,12 +397,7 @@ class _MovieDetailsScreenState extends State<MovieDetailsScreen> {
                                             color: _isLiked ? AppColors.primary : Colors.white,
                                             size: 20,
                                           ),
-                                          onPressed: () {
-                                            setState(() {
-                                              if (_isDisliked) _isDisliked = false;
-                                              _isLiked = !_isLiked;
-                                            });
-                                          },
+                                          onPressed: _toggleLike,  // Updated this line
                                         ),
                                       ),
                                       const SizedBox(height: 8),

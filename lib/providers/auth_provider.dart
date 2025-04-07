@@ -72,7 +72,7 @@ class AuthProvider with ChangeNotifier {
            RegExp(r'[A-Z]').hasMatch(password) &&
            RegExp(r'[a-z]').hasMatch(password) &&
            RegExp(r'[0-9]').hasMatch(password) &&
-           RegExp(r'[!@#\$&*~]').hasMatch(password);
+           RegExp(r'[!@#\$&*~^()+=\-\[\]{};:,.<>?]').hasMatch(password);
   }
 
   String _hashPassword(String password) {
