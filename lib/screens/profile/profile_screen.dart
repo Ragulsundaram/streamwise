@@ -4,6 +4,7 @@ import '../../constants/colors.dart';
 import '../../providers/auth_provider.dart';
 import 'package:provider/provider.dart';
 import 'watched/watched_screen.dart';  // Add this import
+import 'liked/liked_screen.dart';  // Add this import
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -168,7 +169,14 @@ class ProfileScreen extends StatelessWidget {
                     const SizedBox(width: 12),
                     Expanded(
                       child: ElevatedButton.icon(
-                        onPressed: () {},
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const LikedScreen(),
+                            ),
+                          );
+                        },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.black12,
                           foregroundColor: Colors.white,

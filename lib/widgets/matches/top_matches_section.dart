@@ -158,7 +158,7 @@ class _TopMatchesSectionState extends State<TopMatchesSection> {
                     ),
                   ),
                   Transform.translate( // Wrap IconButton with Transform
-                    offset: const Offset(-7, 0), // Move left by 8 pixels
+                    offset: const Offset(0, 0), // Move left by 8 pixels
                     child: IconButton(
                       icon: const Icon(Icons.refresh_rounded, color: Colors.white),
                       onPressed: () => _fetchTopMatches(forceRefresh: true),
