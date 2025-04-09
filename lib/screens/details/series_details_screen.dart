@@ -78,11 +78,13 @@ class _SeriesDetailsScreenState extends State<SeriesDetailsScreen> {
     setState(() => _isLiked = newLikeState);
     
     if (newLikeState) {
+      // Add to liked items
       _likedItems.add(LikedItem(
         id: widget.seriesId,
         mediaType: 'tv',
         likedAt: DateTime.now(),
       ));
+      await LikedItem.saveLikedItems(_username!, _likedItems);
       debugPrint('Added series ${widget.seriesId} to liked items');
 
       // Add to watched items
@@ -109,7 +111,7 @@ class _SeriesDetailsScreenState extends State<SeriesDetailsScreen> {
 
     if (_isDisliked) setState(() => _isDisliked = false);
     if (!isLikedScreen) widget.onLikeToggled?.call();
-  }
+}
 
   Future<void> _fetchSeriesDetails() async {
     try {

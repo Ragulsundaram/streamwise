@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';  // Add this
 import '../models/media_item.dart';
 import '../models/watch/watched_item.dart';
+import '../models/likes/liked_item.dart';  // Add this import
 import '../services/tmdb_service.dart';
 import '../services/profile_service.dart';
 import '../constants/colors.dart';
@@ -208,11 +209,21 @@ class _MediaSelectionScreenState extends State<MediaSelectionScreen> {
       final username = authProvider.username;
       
       if (username != null && username.isNotEmpty) {
-        // Save selected items as watched
+        // Save selected items as watched (existing functionality)
         final watchedItems = selectedItems.map((item) => 
           WatchedItem.fromMediaItem(item)).toList();
-        final saved = await WatchedItem.saveWatchedItems(username, watchedItems);
-        print('Saved watched items: ${watchedItems.length} items, success: $saved'); // Debug print
+        final savedWatched = await WatchedItem.saveWatchedItems(username, watchedItems);
+        print('Saved watched items: ${watchedItems.length} items, success: $savedWatched');
+
+        // Add new functionality: Save as liked items
+        final likedItems = selectedItems.map((item) => 
+          LikedItem(
+            id: item.id,
+            mediaType: item.mediaType,
+            likedAt: DateTime.now(),
+          )).toList();
+        final savedLiked = await LikedItem.saveLikedItems(username, likedItems);
+        print('Saved liked items: ${likedItems.length} items, success: $savedLiked');
 
         // Continue with existing taste profile generation
         final profileService = ProfileService(_tmdbService);

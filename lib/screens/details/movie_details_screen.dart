@@ -78,11 +78,13 @@ class _MovieDetailsScreenState extends State<MovieDetailsScreen> {
     setState(() => _isLiked = newLikeState);
     
     if (newLikeState) {
+      // Add to liked items
       _likedItems.add(LikedItem(
         id: widget.movieId,
         mediaType: 'movie',
         likedAt: DateTime.now(),
       ));
+      await LikedItem.saveLikedItems(_username!, _likedItems);
       debugPrint('Added movie ${widget.movieId} to liked items');
 
       // Add to watched items
@@ -109,7 +111,7 @@ class _MovieDetailsScreenState extends State<MovieDetailsScreen> {
 
     if (_isDisliked) setState(() => _isDisliked = false);
     if (!isLikedScreen) widget.onLikeToggled?.call();
-  }
+}
 
   // Find the like button's onPressed callback and replace it with:
 
