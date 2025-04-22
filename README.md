@@ -66,7 +66,6 @@ flutter run
 - iconsax: Icon pack
 - shared_preferences: Local storage
 - http: API requests
-```plaintext
 
 ## Design Solutions
 
