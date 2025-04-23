@@ -45,12 +45,11 @@ class _TopMatchesSectionState extends State<TopMatchesSection> {
 
   Future<void> _fetchTopMatches({bool forceRefresh = false, bool? isMovieOverride}) async {
     final currentMediaType = (isMovieOverride ?? isMovie) ? 'movie' : 'tv';
-    final currentList = (isMovieOverride ?? isMovie) ? _moviesList : _tvList;
     
-    if ((_isLoading && !forceRefresh) || _currentActiveMediaType == currentMediaType) return;
+    // Remove the currentList variable since it's not used
+    if (_isLoading && !forceRefresh) return; // Remove currentActiveMediaType check
     
     setState(() {
-      _currentActiveMediaType = currentMediaType;
       if (isMovieOverride ?? isMovie) {
         _isLoadingMovies = true;
         if (forceRefresh) _moviesList = [];
@@ -67,7 +66,7 @@ class _TopMatchesSectionState extends State<TopMatchesSection> {
         limit: 10,
         forceRefresh: forceRefresh,
         onMatchCalculated: (MediaItem item) {
-          if (mounted && currentMediaType == _currentActiveMediaType) {
+          if (mounted) {  // Remove currentActiveMediaType check
             setState(() {
               if (isMovieOverride ?? isMovie) {
                 _moviesList = [..._moviesList, item]
@@ -83,14 +82,13 @@ class _TopMatchesSectionState extends State<TopMatchesSection> {
     } catch (e) {
       debugPrint('Error fetching top matches: $e');
     } finally {
-      if (mounted && currentMediaType == _currentActiveMediaType) {
+      if (mounted) {  // Remove currentActiveMediaType check
         setState(() {
           if (isMovieOverride ?? isMovie) {
             _isLoadingMovies = false;
           } else {
             _isLoadingTV = false;
           }
-          _currentActiveMediaType = null;
         });
       }
     }
