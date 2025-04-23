@@ -39,52 +39,51 @@ class _TopMatchesSectionState extends State<TopMatchesSection> {
   void initState() {
     super.initState();
     // Load both movies and TV shows on init
-    _fetchTopMatches();
-    _fetchTopMatches(isMovieOverride: false);
+    _loadInitialData();
+  }
+
+  Future<void> _loadInitialData() async {
+    // Load movies first
+    await _fetchTopMatches();
+    // Then load TV shows
+    if (mounted) {
+      await _fetchTopMatches(isMovieOverride: false);
+    }
   }
 
   Future<void> _fetchTopMatches({bool forceRefresh = false, bool? isMovieOverride}) async {
-    final currentMediaType = (isMovieOverride ?? isMovie) ? 'movie' : 'tv';
+    final targetType = isMovieOverride ?? isMovie;
     
-    // Remove the currentList variable since it's not used
-    if (_isLoading && !forceRefresh) return; // Remove currentActiveMediaType check
-    
-    setState(() {
-      if (isMovieOverride ?? isMovie) {
-        _isLoadingMovies = true;
-        if (forceRefresh) _moviesList = [];
-      } else {
-        _isLoadingTV = true;
-        if (forceRefresh) _tvList = [];
-      }
-    });
-    
+    if (targetType) {
+      if (_isLoadingMovies) return;
+      setState(() => _isLoadingMovies = true);
+    } else {
+      if (_isLoadingTV) return;
+      setState(() => _isLoadingTV = true);
+    }
+
     try {
-      await _tmdbService.getTopMatches(
-        currentMediaType,
-        widget.userProfile,
-        limit: 10,
+      final matches = await _tmdbService.getTopMatches(
+        targetType ? 'movie' : 'tv',  // First parameter should be mediaType
+        widget.userProfile,           // Second parameter should be userProfile
         forceRefresh: forceRefresh,
-        onMatchCalculated: (MediaItem item) {
-          if (mounted) {  // Remove currentActiveMediaType check
-            setState(() {
-              if (isMovieOverride ?? isMovie) {
-                _moviesList = [..._moviesList, item]
-                  ..sort((a, b) => (b.matchPercentage ?? 0).compareTo(a.matchPercentage ?? 0));
-              } else {
-                _tvList = [..._tvList, item]
-                  ..sort((a, b) => (b.matchPercentage ?? 0).compareTo(a.matchPercentage ?? 0));
-              }
-            });
-          }
-        },
       );
-    } catch (e) {
-      debugPrint('Error fetching top matches: $e');
-    } finally {
-      if (mounted) {  // Remove currentActiveMediaType check
+
+      if (mounted) {
         setState(() {
-          if (isMovieOverride ?? isMovie) {
+          if (targetType) {
+            _moviesList = matches;
+            _isLoadingMovies = false;
+          } else {
+            _tvList = matches;
+            _isLoadingTV = false;
+          }
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          if (targetType) {
             _isLoadingMovies = false;
           } else {
             _isLoadingTV = false;
