@@ -25,6 +25,60 @@ class _LikedScreenState extends State<LikedScreen> {
   void initState() {
     super.initState();
     _loadLikedContent();
+    // Add listener to focus changes
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final focus = FocusScope.of(context);
+      focus.addListener(() {
+        if (focus.hasFocus) {
+          _loadLikedContent();
+        }
+      });
+    });
+  }
+
+  Future<void> _onMediaTap(int id, String mediaType) {
+    debugPrint('Tapped media: $mediaType $id');
+    return showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.9,
+        minChildSize: 0.5,
+        maxChildSize: 0.9,
+        builder: (_, controller) => Container(
+          decoration: const BoxDecoration(
+            color: AppColors.background,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: mediaType == 'movie'
+              ? MovieDetailsScreen(
+                  movieId: id,
+                  onLikeToggled: () {
+                    debugPrint('Movie unlike triggered in liked screen');
+                    setState(() {
+                      _likedContent.removeWhere((item) => 
+                        item['id'] == id && item['mediaType'] == mediaType);
+                      debugPrint('Removed movie from UI immediately, remaining: ${_likedContent.length}');
+                    });
+                    _loadLikedContent(); // Refresh content immediately
+                  },
+                )
+              : SeriesDetailsScreen(
+                  seriesId: id,
+                  onLikeToggled: () {
+                    debugPrint('Series unlike triggered in liked screen');
+                    setState(() {
+                      _likedContent.removeWhere((item) => 
+                        item['id'] == id && item['mediaType'] == mediaType);
+                      debugPrint('Removed series from UI immediately, remaining: ${_likedContent.length}');
+                    });
+                    _loadLikedContent(); // Refresh content immediately
+                  },
+                ),
+        ),
+      ),
+    );
   }
 
   Future<void> _loadLikedContent() async {
@@ -59,51 +113,6 @@ class _LikedScreenState extends State<LikedScreen> {
         debugPrint('Updated liked content: ${_likedContent.length} items');
       });
     }
-  }
-
-  void _onMediaTap(int id, String mediaType) {
-    debugPrint('Tapped media: $mediaType $id');
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.9,
-        minChildSize: 0.5,
-        maxChildSize: 0.9,
-        builder: (_, controller) => Container(
-          decoration: const BoxDecoration(
-            color: AppColors.background,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-          ),
-          child: mediaType == 'movie'
-              ? MovieDetailsScreen(
-                  movieId: id,
-                  onLikeToggled: () {
-                    debugPrint('Movie unlike triggered in liked screen');
-                    setState(() {
-                      _likedContent.removeWhere((item) => 
-                        item['id'] == id && item['mediaType'] == mediaType);
-                      debugPrint('Removed movie from UI immediately, remaining: ${_likedContent.length}');
-                    });
-                    Navigator.pop(context);
-                  },
-                )
-              : SeriesDetailsScreen(
-                  seriesId: id,
-                  onLikeToggled: () {
-                    debugPrint('Series unlike triggered in liked screen');
-                    setState(() {
-                      _likedContent.removeWhere((item) => 
-                        item['id'] == id && item['mediaType'] == mediaType);
-                      debugPrint('Removed series from UI immediately, remaining: ${_likedContent.length}');
-                    });
-                    Navigator.pop(context);
-                  },
-                ),
-        ),
-      ),
-    );
   }
 
   @override
